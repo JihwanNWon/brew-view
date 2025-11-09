@@ -1,3 +1,4 @@
+
 ### Brew View — Potion Flow Monitoring
 
 A web-based dashboard for monitoring potion flow and cauldron management. Brew View provides an interactive map, 3D visualization, ticket logs, analytics, and route optimization tools to monitor cauldron capacity, detect suspicious activity, and optimize collection routes.
@@ -7,7 +8,8 @@ A web-based dashboard for monitoring potion flow and cauldron management. Brew V
 ### Table of Contents
 - Overview
 - Prerequisites
-- Installation
+- Quick Start
+- Manual Installation
 - Start the Application
 - Usage Guide
   - Navigation
@@ -31,26 +33,50 @@ Brew View is a Flask-based dashboard for real-time and historical monitoring of 
 
 ---
 
-### Installation
+### Quick Start
+To get up and brewing instantly:
+
+```bash
+./start.sh
+```
+
+This script will:
+- Create and activate a virtual environment
+- Install all required dependencies
+- Launch the Flask application
+
+Once running, open your browser and go to:
+
+```
+http://localhost:5000
+```
+
+To stop the server, press **Ctrl+C** in the terminal.
+
+---
+
+### Manual Installation
+If you prefer to set things up manually:
+
 1. Open a terminal and navigate to the project directory  
-   ```
+   ```bash
    cd /path/to/PycharmProjects/brew-view
    ```
-2. Create a virtual environment (recommended)  
-   ```
+2. Create a virtual environment  
+   ```bash
    python3 -m venv .venv
    ```
 3. Activate the virtual environment  
    - On Linux / macOS:  
-     ```
+     ```bash
      source .venv/bin/activate
      ```
    - On Windows:  
-     ```
+     ```bash
      .venv\Scripts\activate
      ```
 4. Install required dependencies  
-   ```
+   ```bash
    pip3 install -r requirements.txt
    ```
 
@@ -59,7 +85,7 @@ Brew View is a Flask-based dashboard for real-time and historical monitoring of 
 ### Start the Application
 1. Ensure you are in the project directory and the virtual environment is active  
 2. Run the Flask app  
-   ```
+   ```bash
    python3 flask_app.py
    ```
 3. Open your browser and navigate to:  
@@ -163,4 +189,6 @@ For issues, bugs, or feature requests please open an issue in the project GitHub
 
 ---
 
-Happy Brewing and safe cauldron handling!
+Happy Brewing and safe cauldron handling! 🧪✨
+
+---
