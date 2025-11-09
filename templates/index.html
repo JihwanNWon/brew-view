@@ -143,6 +143,70 @@
             color: #5e35b1;
         }
 
+        /* Light mode ticket table styles */
+        body.light-mode .ticket-table td {
+            color: #333;
+            border-bottom: 1px solid #bdbdbd;
+        }
+
+        body.light-mode .ticket-table tr:hover {
+            background: #e3f2fd;
+        }
+
+        body.light-mode .ticket-table tr.suspicious {
+            background: #ffcdd2;
+        }
+
+        body.light-mode .ticket-table tr.suspicious:hover {
+            background: #ef9a9a;
+        }
+
+        /* Chart container styles */
+        .chart-container {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        body.light-mode .chart-container {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .chart-container h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        body.light-mode .chart-container h3 {
+            color: #5e35b1;
+        }
+
+        body.light-mode .chart-container p {
+            color: #424242 !important;
+        }
+
+        /* Dark mode fixes for readability */
+        body:not(.light-mode) .bar-chart-container {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        body:not(.light-mode) .bar-chart-container h2 {
+            color: white;
+        }
+
+        body:not(.light-mode) .map-container h2 {
+            color: white;
+        }
+
+        body:not(.light-mode) .ticket-table td {
+            color: white;
+        }
+
+        body:not(.light-mode) .ticket-table th {
+            color: white;
+        }
+
         /* Animated gradient background */
         body::before {
             content: '';
@@ -1654,8 +1718,8 @@
                     </div>
                     
                     <!-- Courier Performance -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">🚚 Courier Performance</h3>
+                    <div class="chart-container">
+                        <h3>🚚 Courier Performance</h3>
                         <div style="margin-bottom: 20px;">
                             <canvas id="courier-performance-chart" style="max-height: 400px;"></canvas>
                         </div>
@@ -1677,8 +1741,8 @@
                     </div>
                     
                     <!-- Cauldron Efficiency -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">⚗️ Cauldron Efficiency</h3>
+                    <div class="chart-container">
+                        <h3>⚗️ Cauldron Efficiency</h3>
                         <div style="margin-bottom: 20px;">
                             <canvas id="cauldron-efficiency-chart" style="max-height: 400px;"></canvas>
                         </div>
@@ -1699,8 +1763,8 @@
                     </div>
                     
                     <!-- Route Efficiency -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">🛣️ Network Efficiency</h3>
+                    <div class="chart-container">
+                        <h3>🛣️ Network Efficiency</h3>
                         <div class="stats" id="network-stats">
                             <!-- Network stats will be populated here -->
                         </div>
@@ -1719,8 +1783,8 @@
                 <div id="optimization-container">
                     
                     <!-- Introduction -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">📋 Objective</h3>
+                    <div class="chart-container">
+                        <h3>📋 Objective</h3>
                         <p style="color: #666; margin-bottom: 10px;">
                             Calculate the minimum number of witches needed to ensure <strong>no cauldron ever overflows</strong>, 
                             even well into the future. This system accounts for each cauldron's fill rate and creates a 
@@ -1734,27 +1798,31 @@
                     <!-- Results Summary -->
                     <div id="optimization-results" style="display: none;">
                         <!-- Witch Count & Stats -->
-                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                            <h3 style="color: #667eea; margin-bottom: 15px;">📊 Optimization Results</h3>
+                        <div class="chart-container">
+                            <h3>📊 Optimization Results</h3>
                             <div class="stats" id="optimization-stats"></div>
                         </div>
                         
                         <!-- Route Map -->
-                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                            <h3 style="color: #667eea; margin-bottom: 15px;">🗺️ Optimized Routes</h3>
+                        <div class="chart-container">
+                            <h3>🗺️ Optimized Routes</h3>
                             <div id="route-map" style="height: 500px; border-radius: 10px; border: 2px solid #667eea;"></div>
                         </div>
                         
                         <!-- Daily Schedule -->
-                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                            <h3 style="color: #667eea; margin-bottom: 15px;">🧙 Daily Witch Schedule (24-Hour View)</h3>
+                        <div class="chart-container">
+                            <h3>🧙 Daily Witch Schedule (24-Hour View)</h3>
                             <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
                                 <strong>Note:</strong> Each witch's routes throughout a 24-hour period. Multiple witches may visit the same cauldron at different times.
                             </p>
+                            <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                                <button id="export-csv-btn" style="background: #667eea; color: white; border: none; padding: 10px 24px; border-radius: 5px; cursor: pointer; font-size: 15px; font-weight: 500;">⬇️ Export as CSV</button>
+                                <button id="export-pdf-btn" style="background: #764ba2; color: white; border: none; padding: 10px 24px; border-radius: 5px; cursor: pointer; font-size: 15px; font-weight: 500;">⬇️ Export as PDF</button>
+                            </div>
                             <table class="ticket-table">
                                 <thead>
                                     <tr>
-                                        <th>Witch ID</th>
+                                        <th>Witch</th>
                                         <th>Route</th>
                                         <th>Cauldrons</th>
                                         <th>Distance (km)</th>
@@ -1767,8 +1835,8 @@
                         </div>
                         
                         <!-- Cauldron Analysis -->
-                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                            <h3 style="color: #667eea; margin-bottom: 15px;">🔮 Cauldron Fill Analysis</h3>
+                        <div class="chart-container">
+                            <h3>🔮 Cauldron Fill Analysis</h3>
                             <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
                                 <strong>Note:</strong> Fill Rate = continuous accumulation | Drain Rate = collection speed (reference) | Net Rate = Fill Rate (cauldrons fill continuously between pickups)
                             </p>
@@ -2059,11 +2127,6 @@
                 button.style.color = 'white';
                 localStorage.setItem('theme', 'dark');
             }
-
-            // Update 3D scene colors if it's initialized
-            if (typeof update3DTheme === 'function') {
-                update3DTheme();
-            }
         }
 
         // Load saved theme preference
@@ -2170,13 +2233,15 @@
             const cbsC = Array.from(document.querySelectorAll('#filter-cauldron-container input[type="checkbox"]'));
             const selectedC = cbsC.filter(cb => cb.checked).map(cb => cb.value);
             const cLabel = document.getElementById('cauldron-dropdown-label');
-            cLabel.textContent = selectedC.length === cbsC.length ? 'All Cauldrons' : (selectedC.slice(0,3).join(', ') + (selectedC.length>3 ? ` +${selectedC.length-3}` : '')) || 'None';
+            const selectedCNames = selectedC.map(id => getCauldronName(id));
+            cLabel.textContent = selectedC.length === cbsC.length ? 'All Cauldrons' : (selectedCNames.slice(0,3).join(', ') + (selectedC.length>3 ? ` +${selectedC.length-3}` : '')) || 'None';
 
             // Couriers
             const cbsR = Array.from(document.querySelectorAll('#filter-courier-container input[type="checkbox"]'));
             const selectedR = cbsR.filter(cb => cb.checked).map(cb => cb.value);
             const rLabel = document.getElementById('courier-dropdown-label');
-            rLabel.textContent = selectedR.length === cbsR.length ? 'All Couriers' : (selectedR.slice(0,3).join(', ') + (selectedR.length>3 ? ` +${selectedR.length-3}` : '')) || 'None';
+            const selectedRNames = selectedR.map(id => getWitchName(id));
+            rLabel.textContent = selectedR.length === cbsR.length ? 'All Couriers' : (selectedRNames.slice(0,3).join(', ') + (selectedR.length>3 ? ` +${selectedR.length-3}` : '')) || 'None';
 
             // Status
             const cbsS = Array.from(document.querySelectorAll('#filter-status-container input[type="checkbox"]'));
@@ -2208,6 +2273,19 @@
         let filteredTickets = [];
         let currentTicketPage = 1;
         let ticketsPerPage = 10;
+    // Display name maps (default to IDs until loaded)
+    let cauldronDisplayNames = {};
+    let witchDisplayNames = {};
+    function getCauldronName(id){ return cauldronDisplayNames[id] || id; }
+    function getWitchName(id){ return witchDisplayNames[id] || id; }
+    function formatHourDecimalToHHMM(hours){
+        // hours may be decimal (e.g., 13.5). Convert to minutes then HH:MM.
+        if (hours == null || isNaN(hours)) return '??:??';
+        const totalMinutes = Math.round(hours * 60);
+        const h = Math.floor(totalMinutes / 60) % 24; // wrap just in case
+        const m = totalMinutes % 60;
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+    }
         
         // Initialize map
         function initMap() {
@@ -2696,6 +2774,9 @@
                 
                 cauldrons = data;
                 console.log('Loaded cauldrons:', cauldrons);
+                // Build cauldron display name map
+                cauldronDisplayNames = {};
+                cauldrons.forEach(c => { cauldronDisplayNames[c.id] = c.name || c.id; });
                 
                 // Add cauldron markers (will be updated by timeline)
                 cauldrons.forEach(cauldron => {
@@ -3112,6 +3193,9 @@
                 // API returns {metadata, transport_tickets}
                 allTickets = data.transport_tickets || [];
                 filteredTickets = [...allTickets]; // Initialize filtered tickets
+                // Build witch/courier display name map (if API later supplies names extend here)
+                witchDisplayNames = {};
+                allTickets.forEach(t => { if (t.courier_id) witchDisplayNames[t.courier_id] = t.courier_id; });
                 
                 console.log('Loaded', allTickets.length, 'tickets');
                 console.log('Metadata:', data.metadata);
@@ -3551,7 +3635,7 @@
 
                 const labelEl = document.createElement('label');
                 labelEl.setAttribute('for', checkbox.id);
-                labelEl.textContent = cauldron;
+                labelEl.textContent = getCauldronName(cauldron);
 
                 item.appendChild(checkbox);
                 item.appendChild(labelEl);
@@ -3572,7 +3656,7 @@
 
                 const labelEl = document.createElement('label');
                 labelEl.setAttribute('for', checkbox.id);
-                labelEl.textContent = courier;
+                labelEl.textContent = getWitchName(courier);
 
                 item.appendChild(checkbox);
                 item.appendChild(labelEl);
@@ -3745,12 +3829,12 @@
                 </div>
                 <div class="ticket-stat-card">
                     <div class="ticket-stat-label">🧙 Top Fraudulent Witch</div>
-                    <div class="ticket-stat-value" style="font-size: 20px;">${topCourier}</div>
+                    <div class="ticket-stat-value" style="font-size: 20px;">${getWitchName(topCourier)}</div>
                     <div class="ticket-stat-sub">${topCourierCount} suspicious ticket${topCourierCount !== 1 ? 's' : ''}</div>
                 </div>
                 <div class="ticket-stat-card">
                     <div class="ticket-stat-label">🪄 Most Problematic Cauldron</div>
-                    <div class="ticket-stat-value" style="font-size: 20px;">${topCauldron}</div>
+                    <div class="ticket-stat-value" style="font-size: 20px;">${getCauldronName(topCauldron)}</div>
                     <div class="ticket-stat-sub">${topCauldronCount} suspicious ticket${topCauldronCount !== 1 ? 's' : ''}</div>
                 </div>
             `;
@@ -3789,9 +3873,9 @@
 
                 row.innerHTML = `
                     <td>${ticket.ticket_id || 'N/A'}</td>
-                    <td>${ticket.cauldron_id || 'N/A'}</td>
+                    <td>${getCauldronName(ticket.cauldron_id) || 'N/A'}</td>
                     <td>${ticket.amount_collected ? ticket.amount_collected.toFixed(2) : 'N/A'}</td>
-                    <td>${ticket.courier_id || 'N/A'}</td>
+                    <td>${getWitchName(ticket.courier_id) || 'N/A'}</td>
                     <td>${ticket.date || 'N/A'}</td>
                     <td>${isSuspicious ? '<span class=\"suspicious-badge\">SUSPICIOUS</span>' : statusText}</td>
                 `;
@@ -3982,7 +4066,7 @@
                 
                 const label = document.createElement('label');
                 label.htmlFor = checkbox.id;
-                label.textContent = cauldron.id; // Just the ID, no "Cauldron" prefix
+                label.textContent = getCauldronName(cauldron.id);
                 
                 div.appendChild(checkbox);
                 div.appendChild(label);
@@ -4089,7 +4173,7 @@
                 });
                 
                 datasets.push({
-                    label: cauldron.id, // Just the ID, no "Cauldron" prefix
+                    label: getCauldronName(cauldron.id),
                     data: data,
                     borderColor: colors[colorIndex % colors.length],
                     backgroundColor: colors[colorIndex % colors.length] + '20',
@@ -4339,7 +4423,7 @@
                                    data.performanceRating >= 60 ? '#ffc107' : '#dc3545';
                 return `
                     <tr>
-                        <td><strong>${data.courier}</strong></td>
+                        <td><strong>${getWitchName(data.courier)}</strong></td>
                         <td>${data.deliveries}</td>
                         <td>${data.totalCollected.toFixed(1)}L</td>
                         <td>${data.avgPerDelivery.toFixed(1)}L</td>
@@ -4358,7 +4442,7 @@
             courierChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: topCouriers.map(d => d.courier),
+                    labels: topCouriers.map(d => getWitchName(d.courier)),
                     datasets: [{
                         label: 'Performance Rating',
                         data: topCouriers.map(d => d.performanceRating),
@@ -4458,7 +4542,7 @@
                                    data.status === 'Good' ? '#ffc107' : '#dc3545';
                 return `
                     <tr>
-                        <td><strong>${data.cauldron}</strong></td>
+                        <td><strong>${getCauldronName(data.cauldron)}</strong></td>
                         <td>${data.collections}</td>
                         <td>${data.totalOutput.toFixed(1)}L</td>
                         <td>${data.avgFillRate.toFixed(1)}L</td>
@@ -4476,7 +4560,7 @@
             cauldronChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: topCauldrons.map(d => d.cauldron),
+                    labels: topCauldrons.map(d => getCauldronName(d.cauldron)),
                     datasets: [{
                         label: 'Total Output (L)',
                         data: topCauldrons.map(d => d.totalOutput),
@@ -5397,7 +5481,7 @@
                         <p style="margin: 0 0 10px 0;">Some cauldrons are not being visited frequently enough:</p>
                         <ul style="margin: 0; padding-left: 20px;">
                             ${validation.issues.map(issue => `
-                                <li><strong>${issue.cauldronId}</strong>: ${issue.actualVisits} visits/day (needs ${issue.requiredVisits}) - 
+                                <li><strong>${getCauldronName(issue.cauldronId)}</strong>: ${issue.actualVisits} visits/day (needs ${issue.requiredVisits}) - 
                                 fills in ${issue.timeToFull.toFixed(1)}h [${issue.severity}]</li>
                             `).join('')}
                         </ul>
@@ -5450,7 +5534,7 @@
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Most Urgent Cauldron</div>
-                    <div class="stat-value">${mostUrgentCauldron.id} (${mostUrgentCauldron.timeToFull.toFixed(1)}h)</div>
+                    <div class="stat-value">${getCauldronName(mostUrgentCauldron.id)} (${mostUrgentCauldron.timeToFull === Infinity ? '∞' : formatHourDecimalToHHMM(mostUrgentCauldron.timeToFull)})</div>
                 </div>
             `;
             
@@ -5461,16 +5545,18 @@
                 // Show detailed witch schedules
                 window.currentWitchSchedules.forEach(witch => {
                     witch.assignments.forEach((assignment, idx) => {
-                        const timeRange = `${assignment.startHour.toFixed(1)}h - ${assignment.endHour.toFixed(1)}h`;
-                        const sequence = ['market', ...assignment.cauldrons, 'market'].join(' → ');
+                        const timeRange = `${formatHourDecimalToHHMM(assignment.startHour)} - ${formatHourDecimalToHHMM(assignment.endHour)}`;
+                        const sequence = ['market', ...assignment.cauldrons, 'market']
+                            .map(n => (typeof n === 'string' && n.toLowerCase() === 'market') ? 'Market' : getCauldronName(n))
+                            .join(' → ');
                         
                         scheduleHTML += `
                             <tr>
-                                <td>${witch.witchId}</td>
+                                <td>${getWitchName(witch.witchId)}</td>
                                 <td>${sequence}</td>
                                 <td>${assignment.cauldrons.length}</td>
                                 <td>${assignment.route.distance.toFixed(2)}</td>
-                                <td>${assignment.route.time.toFixed(0)}</td>
+                                <td>${formatHourDecimalToHHMM(assignment.route.time/60)}</td>
                                 <td>${timeRange}</td>
                             </tr>
                         `;
@@ -5479,14 +5565,20 @@
             } else {
                 // Fallback to original route display
                 routes.forEach(route => {
+                    const seqDisplay = route.sequence
+                        .map(n => (typeof n === 'string' && n.toLowerCase() === 'market') ? 'Market' : getCauldronName(n))
+                        .join(' → ');
+                    const timeRange = route.startHour != null && route.endHour != null
+                        ? `${formatHourDecimalToHHMM(route.startHour)} - ${formatHourDecimalToHHMM(route.endHour)}`
+                        : `${(route.dailyFrequency || 0)}x per day`;
                     scheduleHTML += `
                         <tr>
-                            <td>${route.witchId}</td>
-                            <td>${route.sequence.join(' → ')}</td>
+                            <td>${getWitchName(route.witchId)}</td>
+                            <td>${seqDisplay}</td>
                             <td>${route.cauldrons.length}</td>
                             <td>${route.distance.toFixed(2)}</td>
                             <td>${route.time.toFixed(0)}</td>
-                            <td>${route.dailyFrequency}x per day</td>
+                            <td>${timeRange}</td>
                         </tr>
                     `;
                 });
@@ -5500,24 +5592,126 @@
                                    c.status === 'Urgent' ? '#ffaa00' : '#44aa44';
                 analysisHTML += `
                     <tr>
-                        <td>${c.id}</td>
+                        <td>${getCauldronName(c.id)}</td>
                         <td>${c.currentLevel.toFixed(0)}</td>
                         <td>${c.maxVolume}</td>
                         <td>${c.fillRate.toFixed(2)}</td>
                         <td>${c.drainRate.toFixed(2)}</td>
                         <td style="font-weight: bold; color: #ff8800">${c.netRate.toFixed(2)}</td>
-                        <td>${c.timeToFull === Infinity ? '∞' : c.timeToFull.toFixed(1) + 'h'}</td>
+                        <td>${c.timeToFull === Infinity ? '∞' : formatHourDecimalToHHMM(c.timeToFull)}</td>
                         <td style="color: ${statusColor}; font-weight: bold;">${c.status}</td>
                     </tr>
                 `;
             });
             document.getElementById('cauldron-analysis-tbody').innerHTML = analysisHTML;
             
+            // Wire up export buttons (rebind every render)
+            const exportCsvBtn = document.getElementById('export-csv-btn');
+            const exportPdfBtn = document.getElementById('export-pdf-btn');
+            if (exportCsvBtn) exportCsvBtn.onclick = () => {
+                const rows = collectScheduleRows(routes);
+                exportScheduleToCSV(rows);
+            };
+            if (exportPdfBtn) exportPdfBtn.onclick = () => {
+                const rows = collectScheduleRows(routes);
+                exportScheduleToPrintablePDF(rows);
+            };
+            
             // Analyze concurrent cauldron visits
             analyzeConcurrentVisits(window.currentWitchSchedules, cauldronAnalysis);
             
             // Draw route map
             displayRouteMap(routes);
+        }
+        
+        // Build exportable schedule rows from current state
+        function collectScheduleRows(routes){
+            const rows = [];
+            if (window.currentWitchSchedules && window.currentWitchSchedules.length > 0){
+                window.currentWitchSchedules.forEach(witch => {
+                    witch.assignments.forEach(assignment => {
+                        const sequence = ['Market', ...assignment.cauldrons.map(id => getCauldronName(id)), 'Market'].join(' → ');
+                        rows.push({
+                            witch: getWitchName(witch.witchId),
+                            route: sequence,
+                            cauldronCount: assignment.cauldrons.length,
+                            distanceKm: assignment.route?.distance != null ? assignment.route.distance.toFixed(2) : '',
+                            timeHHMM: assignment.route?.time != null ? formatHourDecimalToHHMM(assignment.route.time/60) : '',
+                            window: `${formatHourDecimalToHHMM(assignment.startHour)} - ${formatHourDecimalToHHMM(assignment.endHour)}`
+                        });
+                    });
+                });
+            } else if (routes && routes.length){
+                routes.forEach(route => {
+                    const seqDisplay = route.sequence
+                        .map(n => (typeof n === 'string' && n.toLowerCase() === 'market') ? 'Market' : getCauldronName(n))
+                        .join(' → ');
+                    const windowText = route.startHour != null && route.endHour != null
+                        ? `${formatHourDecimalToHHMM(route.startHour)} - ${formatHourDecimalToHHMM(route.endHour)}`
+                        : `${(route.dailyFrequency || 0)}x per day`;
+                    rows.push({
+                        witch: getWitchName(route.witchId),
+                        route: seqDisplay,
+                        cauldronCount: route.cauldrons.length,
+                        distanceKm: route.distance.toFixed(2),
+                        timeHHMM: formatHourDecimalToHHMM((route.time||0)/60),
+                        window: windowText
+                    });
+                });
+            }
+            return rows;
+        }
+        
+        // Export helpers
+        function exportScheduleToCSV(rows){
+            if (!rows || !rows.length){ alert('No schedule to export yet.'); return; }
+            const headers = ['Witch','Route','Cauldrons','Distance (km)','Time','Time Window'];
+            const csvLines = [headers.join(',')];
+            rows.forEach(r => {
+                const line = [r.witch, r.route, r.cauldronCount, r.distanceKm, r.timeHHMM, r.window]
+                    .map(val => {
+                        const s = String(val ?? '');
+                        // Escape commas/quotes
+                        if (/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
+                        return s;
+                    }).join(',');
+                csvLines.push(line);
+            });
+            const blob = new Blob([csvLines.join('\n')], {type: 'text/csv;charset=utf-8;'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const ts = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+            a.href = url;
+            a.download = `daily-witch-schedule-${ts}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function exportScheduleToPrintablePDF(rows){
+            if (!rows || !rows.length){ alert('No schedule to export yet.'); return; }
+            const win = window.open('', '_blank');
+            const style = `
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 24px; color: #222; }
+                    h1 { margin: 0 0 8px 0; font-size: 20px; }
+                    p.meta { margin: 0 0 16px 0; color: #666; font-size: 12px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ddd; padding: 8px; font-size: 12px; }
+                    th { background: #f0f3ff; text-align: left; }
+                    tr:nth-child(even){ background: #fafafa; }
+                </style>`;
+            const nowStr = new Date().toLocaleString();
+            const header = `<h1>Daily Witch Schedule</h1><p class="meta">Generated ${nowStr}</p>`;
+            const thead = `<thead><tr><th>Witch</th><th>Route</th><th>Cauldrons</th><th>Distance (km)</th><th>Time</th><th>Time Window</th></tr></thead>`;
+            const tbody = rows.map(r => `<tr><td>${r.witch}</td><td>${r.route}</td><td>${r.cauldronCount}</td><td>${r.distanceKm}</td><td>${r.timeHHMM}</td><td>${r.window}</td></tr>`).join('');
+            const html = `<!doctype html><html><head><meta charset="utf-8">${style}</head><body>${header}<table>${thead}<tbody>${tbody}</tbody></table></body></html>`;
+            win.document.open();
+            win.document.write(html);
+            win.document.close();
+            // Wait for content, then trigger print (user can save as PDF)
+            win.onload = () => win.print();
         }
         
         // Analyze which cauldrons are visited by multiple witches
@@ -5659,7 +5853,7 @@
             // Insert before the cauldron analysis table
             const cauldronAnalysisDiv = document.querySelector('#cauldron-analysis-tbody').parentElement.parentElement;
             const analysisSection = document.createElement('div');
-            analysisSection.style.cssText = 'background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;';
+            analysisSection.className = 'chart-container';
             analysisSection.innerHTML = concurrentHTML;
             cauldronAnalysisDiv.parentElement.insertBefore(analysisSection, cauldronAnalysisDiv);
         }
@@ -5984,8 +6178,8 @@
                 // Get current level
                 const currentLevel = currentLevels[cauldronId] || 0;
                 
-                // Net fill rate (assuming continuous fill)
-                const netFillRate = fillRatePerHour;
+                // Net fill rate (fill - drain)
+                const netFillRate = fillRatePerHour - drainRatePerHour;
                 
                 // Calculate safety level
                 const safetyLevel = maxVolume * safetyMargin;
@@ -6294,7 +6488,8 @@
                 const fillRate = (cauldronFillRates[cauldronId] || 0.5) * 60; // L/hr
                 const drainRate = (cauldronDrainRates[cauldronId] || (fillRate / 2));
                 const currentLevel = currentLevels[cauldronId] || 0;
-                const predictedLevel = currentLevel + (fillRate * forecastHours);
+                const netRate = fillRate - drainRate;
+                const predictedLevel = currentLevel + (netRate * forecastHours);
                 const safetyLevel = maxVolume * safetyMargin;
                 
                 predictions.push({
@@ -6303,7 +6498,7 @@
                     currentLevel,
                     fillRate,
                     drainRate,
-                    netFillRate: fillRate,
+                    netFillRate: netRate,
                     predictedLevel,
                     maxVolume,
                     safetyLevel,
@@ -6438,8 +6633,8 @@
                 // Get current level
                 const currentLevel = currentLevels[cauldronId] || 0;
                 
-                // Net fill rate (assuming continuous fill)
-                const netFillRate = fillRatePerHour;
+                // Net fill rate (fill - drain)
+                const netFillRate = fillRatePerHour - drainRatePerHour;
                 
                 // Calculate safety level
                 const safetyLevel = maxVolume * safetyMargin;
@@ -6821,14 +7016,8 @@
 
             // Scene setup
             scene3d = new THREE.Scene();
-
-            // Set colors based on current theme
-            const isLightMode = document.body.classList.contains('light-mode');
-            const bgColor = isLightMode ? 0xe8f0ff : 0x0c0b2f;
-            const fogColor = isLightMode ? 0xe8f0ff : 0x0c0b2f;
-
-            scene3d.background = new THREE.Color(bgColor);
-            scene3d.fog = new THREE.Fog(fogColor, 50, 200);
+            scene3d.background = new THREE.Color(0x0c0b2f);
+            scene3d.fog = new THREE.Fog(0x0c0b2f, 50, 200);
 
             // Camera setup - better initial position
             camera3d = new THREE.PerspectiveCamera(
@@ -7381,18 +7570,6 @@
 
             camera3d.lookAt(controls3d.target);
             controls3d.update();
-        }
-
-        // Update 3D scene colors based on theme
-        function update3DTheme() {
-            if (!scene3d) return;
-
-            const isLightMode = document.body.classList.contains('light-mode');
-            const bgColor = isLightMode ? 0xe8f0ff : 0x0c0b2f;
-            const fogColor = isLightMode ? 0xe8f0ff : 0x0c0b2f;
-
-            scene3d.background = new THREE.Color(bgColor);
-            scene3d.fog.color = new THREE.Color(fogColor);
         }
 
         // Update 3D cauldrons with current timeline data
