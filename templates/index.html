@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔮 Brew View - Potion Flow Monitoring</title>
+    <title>Brew View - Potion Flow Monitoring</title>
     
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -31,6 +31,17 @@
             color: #667eea;
             text-align: center;
             font-size: 2em;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .brand .logo {
+            height: 44px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
         }
         
         .header p {
@@ -107,6 +118,15 @@
             height: 600px;
             width: 100%;
             border-radius: 8px;
+        }
+
+        /* Darken base map tiles so marker glow pops */
+        .leaflet-tile-pane {
+            filter: brightness(0.55) contrast(1.1) saturate(0.85);
+        }
+        /* Optional: slightly darker map background while tiles load */
+        #map {
+            background-color: #0f1324;
         }
         
         .info-panel {
@@ -486,6 +506,7 @@
         }
         
         /* Custom marker styles */
+        /* Legacy circle marker (kept for reference)
         .cauldron-marker {
             background: white;
             border: 3px solid #667eea;
@@ -496,6 +517,36 @@
             align-items: center;
             justify-content: center;
             font-size: 16px;
+        }
+        */
+        .cauldron-img-wrapper {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        .cauldron-img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            pointer-events: none;
+        }
+        .glow-green-light {
+            filter: drop-shadow(0 0 6px rgba(144, 238, 144, 0.9)) drop-shadow(0 0 12px rgba(144, 238, 144, 0.5)); /* lightgreen */
+        }
+        .glow-green-yellow {
+            filter: drop-shadow(0 0 6px rgba(173, 255, 47, 0.9)) drop-shadow(0 0 12px rgba(173, 255, 47, 0.55)); /* greenyellow */
+        }
+        .glow-yellow {
+            filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.9)) drop-shadow(0 0 12px rgba(255, 215, 0, 0.55)); /* gold */
+        }
+        .glow-orange {
+            filter: drop-shadow(0 0 6px rgba(255, 140, 0, 0.95)) drop-shadow(0 0 12px rgba(255, 140, 0, 0.55)); /* darkorange */
+        }
+        .glow-red {
+            filter: drop-shadow(0 0 6px rgba(220, 20, 60, 0.95)) drop-shadow(0 0 12px rgba(220, 20, 60, 0.6)); /* crimson */
         }
         
         .market-marker {
@@ -513,14 +564,17 @@
 </head>
 <body>
     <div class="header">
-        <h1>🔮 Brew View</h1>
+        <div class="brand">
+            <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Brew View Logo" />
+            <h1>Brew View</h1>
+        </div>
         <p>Potion Flow Monitoring Dashboard</p>
     </div>
     
     <!-- Tabs Navigation -->
     <div class="tabs">
-        <button class="tab active" onclick="switchTab('map')">📍 Map</button>
-        <button class="tab" onclick="switchTab('tickets')">🎫 Ticket Logs</button>
+        <button class="tab active" onclick="switchTab('map', this)">📍 Map</button>
+        <button class="tab" onclick="switchTab('tickets', this)">🎫 Ticket Logs</button>
     </div>
     
     <!-- Map Tab Content -->
@@ -621,6 +675,11 @@
                 <h2>🎫 Ticket Logs</h2>
                 <div id="ticket-loading" class="loading">Loading tickets...</div>
                 <div id="ticket-container" style="display: none;">
+                    <!-- Statistics Panel -->
+                    <div id="ticket-stats" style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <!-- Stats will be populated here -->
+                    </div>
+                    
                     <!-- Filters and Sorting -->
                     <div class="ticket-filters">
                         <div class="filter-group">
@@ -721,7 +780,7 @@
     
     <script>
         // Tab switching function
-        function switchTab(tabName) {
+        function switchTab(tabName, element) {
             // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
@@ -736,12 +795,33 @@
             document.getElementById(tabName + '-tab').classList.add('active');
             
             // Add active class to clicked tab
-            event.target.classList.add('active');
+            if (element) {
+                element.classList.add('active');
+            }
             
             // If switching to map tab, invalidate size to fix rendering issues
             if (tabName === 'map' && map) {
                 setTimeout(() => map.invalidateSize(), 100);
             }
+        }
+
+        // Build a cauldron icon using PNG with a color glow based on fill percent
+        function getCauldronIcon(fillPercent) {
+            let glowClass = 'glow-green-light';
+            const p = typeof fillPercent === 'number' ? fillPercent : parseFloat(fillPercent) || 0;
+            if (p > 90) glowClass = 'glow-red';
+            else if (p > 75) glowClass = 'glow-orange';
+            else if (p > 60) glowClass = 'glow-yellow';
+            else if (p > 40) glowClass = 'glow-green-yellow';
+
+            const imgSrc = "{{ url_for('static', filename='images/markers/cauldron.png') }}";
+            const html = `<div class="cauldron-img-wrapper ${glowClass}"><img class="cauldron-img" src="${imgSrc}" alt="Cauldron" /></div>`;
+            return L.divIcon({
+                className: 'custom-icon',
+                html,
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+            });
         }
 
         // Dropdown checkbox helpers
@@ -1112,32 +1192,8 @@
                 const fillPercent = ((currentVolume / maxVolume) * 100).toFixed(1);
                 const name = cauldron.name || cauldron.id;
                 
-                // Determine color
-                let markerColor = '🧪';
-                let bgColor = '#eff';
-                let borderColor = '#667eea';
-                
-                if (fillPercent > 90) {
-                    markerColor = '🔴';
-                    bgColor = '#fee';
-                    borderColor = '#c00';
-                } else if (fillPercent > 70) {
-                    markerColor = '🟠';
-                    bgColor = '#ffe';
-                    borderColor = '#f90';
-                } else if (fillPercent > 50) {
-                    markerColor = '🟡';
-                    bgColor = '#ffc';
-                    borderColor = '#fc0';
-                }
-                
-                // Update marker icon
-                const icon = L.divIcon({
-                    className: 'custom-icon',
-                    html: `<div class="cauldron-marker" style="background: ${bgColor}; border-color: ${borderColor};">${markerColor}</div>`,
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
-                });
+                // Update marker icon using PNG with glow
+                const icon = getCauldronIcon(parseFloat(fillPercent));
                 marker.setIcon(icon);
                 
                 // Update popup
@@ -1208,13 +1264,8 @@
                         markerColor = '🔵'; // Blue - plenty of space
                     }
                     
-                    // Create custom icon
-                    const icon = L.divIcon({
-                        className: 'custom-icon',
-                        html: `<div class="cauldron-marker" style="background: ${fillPercent > 90 ? '#fee' : fillPercent > 70 ? '#ffe' : '#eff'}; border-color: ${fillPercent > 90 ? '#c00' : fillPercent > 70 ? '#f90' : '#667eea'};">${markerColor}</div>`,
-                        iconSize: [30, 30],
-                        iconAnchor: [15, 15]
-                    });
+                    // Create PNG icon with default (blue) glow
+                    const icon = getCauldronIcon(fillPercent);
                     
                     // Add marker
                     const marker = L.marker([lat, lon], { icon: icon }).addTo(map);
@@ -1266,12 +1317,12 @@
                 const lon = market.longitude;
                 const name = market.name || 'Enchanted Market';
                 
-                // Create custom market icon
-                const icon = L.divIcon({
-                    className: 'custom-icon',
-                    html: '<div class="market-marker">🏪</div>',
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20]
+                // Create custom market icon using PNG
+                const icon = L.icon({
+                    iconUrl: '/static/images/markers/market.png',
+                    iconSize: [50, 50],
+                    iconAnchor: [25, 25],
+                    popupAnchor: [0, -25]
                 });
                 
                 // Add marker
@@ -1566,6 +1617,11 @@
                 console.log('Sample ticket:', allTickets[0]);
                 
                 populateFilterDropdowns();
+                // If historical data already loaded compute discrepancies now
+                if (cachedData && cachedData.length) {
+                    computeDailyDrainEvents();
+                    annotateTicketDiscrepancies();
+                }
                 displayTickets();
                 document.getElementById('ticket-loading').style.display = 'none';
                 document.getElementById('ticket-container').style.display = 'block';
@@ -1577,15 +1633,347 @@
                 return false;
             }
         }
-        
-        // Check if a ticket is suspicious
+
+        // Map: date -> cauldron_id -> [drain events]
+        let dailyDrainEvents = {};
+        // Map: cauldron_id -> estimated fill_rate (L/min) calculated from data
+        let cauldronFillRates = {};
+
+        // Step 1: Estimate fill rates from historical data by analyzing positive deltas
+        // Only use data from stable generation periods (not during drains)
+        function estimateFillRates() {
+            cauldronFillRates = {};
+            if (!cachedData || cachedData.length < 2) return;
+            
+            const deltasByCauldron = {}; // cauldron_id -> [positive deltas during generation]
+            
+            // First pass: identify drain periods (consecutive negative deltas)
+            const isDraining = {}; // index -> cauldron_id -> boolean
+            for (let i = 1; i < cachedData.length; i++) {
+                const prev = cachedData[i-1];
+                const curr = cachedData[i];
+                const prevLevels = prev.cauldron_levels || {};
+                const currLevels = curr.cauldron_levels || {};
+                
+                if (!isDraining[i]) isDraining[i] = {};
+                if (!isDraining[i-1]) isDraining[i-1] = {};
+                
+                const ids = new Set([...Object.keys(prevLevels), ...Object.keys(currLevels)]);
+                ids.forEach(id => {
+                    const Vprev = prevLevels[id] ?? 0;
+                    const Vcurr = currLevels[id] ?? 0;
+                    const delta = Vcurr - Vprev;
+                    
+                    // Mark as draining if negative delta
+                    if (delta < -0.1) {
+                        isDraining[i][id] = true;
+                        isDraining[i-1][id] = true; // Mark previous point too
+                        // Also mark next few points to avoid drain tail effects
+                        if (isDraining[i+1]) isDraining[i+1][id] = true;
+                        if (isDraining[i+2]) isDraining[i+2][id] = true;
+                    }
+                });
+            }
+            
+            // Second pass: collect positive deltas ONLY from non-drain periods
+            for (let i = 1; i < cachedData.length; i++) {
+                const prev = cachedData[i-1];
+                const curr = cachedData[i];
+                const prevLevels = prev.cauldron_levels || {};
+                const currLevels = curr.cauldron_levels || {};
+                
+                const ids = new Set([...Object.keys(prevLevels), ...Object.keys(currLevels)]);
+                ids.forEach(id => {
+                    const Vprev = prevLevels[id] ?? 0;
+                    const Vcurr = currLevels[id] ?? 0;
+                    const delta = Vcurr - Vprev;
+                    
+                    // Only collect positive deltas when NOT draining
+                    if (delta > 0 && !isDraining[i]?.[id] && !isDraining[i-1]?.[id]) {
+                        if (!deltasByCauldron[id]) deltasByCauldron[id] = [];
+                        deltasByCauldron[id].push(delta);
+                    }
+                });
+            }
+            
+            // Calculate average (mean) positive delta as fill_rate estimate (L/min)
+            // Using mean instead of median for more stable rate estimation
+            Object.keys(deltasByCauldron).forEach(id => {
+                const deltas = deltasByCauldron[id];
+                if (deltas.length === 0) {
+                    cauldronFillRates[id] = 1.0; // Fallback
+                    return;
+                }
+                const sum = deltas.reduce((acc, val) => acc + val, 0);
+                const mean = sum / deltas.length;
+                cauldronFillRates[id] = mean;
+            });
+            
+            console.log('Estimated fill rates (L/min) from non-drain periods:', cauldronFillRates);
+            Object.keys(cauldronFillRates).forEach(id => {
+                const rate = cauldronFillRates[id];
+                const sampleCount = deltasByCauldron[id]?.length || 0;
+                console.log(`  ${id}: ${rate.toFixed(3)} L/min (${sampleCount} samples)`);
+            });
+        }
+
+        // Step 2: Detect individual drain events and store them
+        // Each drain event = one pickup session (~15 minutes of continuous decline)
+        function computeDailyDrainEvents() {
+            dailyDrainEvents = {};
+            if (!cachedData || !cachedData.length) return;
+            
+            // First estimate fill rates from the data
+            estimateFillRates();
+            
+            const DRAIN_DURATION_MIN = 15;
+            
+            // Group data by date and cauldron
+            const seriesByDateCauldron = {}; // date -> cauldron -> [{timestamp, level, delta}]
+            for (let i = 1; i < cachedData.length; i++) {
+                const prev = cachedData[i-1];
+                const curr = cachedData[i];
+                const prevLevels = prev.cauldron_levels || {};
+                const currLevels = curr.cauldron_levels || {};
+                const dateStr = new Date(curr.timestamp).toISOString().slice(0,10);
+                if (!seriesByDateCauldron[dateStr]) seriesByDateCauldron[dateStr] = {};
+                const ids = new Set([...Object.keys(prevLevels), ...Object.keys(currLevels)]);
+                ids.forEach(id => {
+                    const Vprev = prevLevels[id] ?? 0;
+                    const Vcurr = currLevels[id] ?? 0;
+                    const delta = Vcurr - Vprev;
+                    if (!seriesByDateCauldron[dateStr][id]) seriesByDateCauldron[dateStr][id] = [];
+                    seriesByDateCauldron[dateStr][id].push({timestamp: curr.timestamp, level: Vcurr, prevLevel: Vprev, delta});
+                });
+            }
+            
+            // Detect individual drain events (sessions): continuous negative deltas
+            Object.keys(seriesByDateCauldron).forEach(dateStr => {
+                if (!dailyDrainEvents[dateStr]) dailyDrainEvents[dateStr] = {};
+                Object.keys(seriesByDateCauldron[dateStr]).forEach(id => {
+                    const series = seriesByDateCauldron[dateStr][id];
+                    let sessionStart = null;
+                    let sessionStartLevel = 0;
+                    let sessionEndLevel = 0;
+                    let sessionStartTime = null;
+                    const events = [];
+                    
+                    for (let i = 0; i < series.length; i++) {
+                        const pt = series[i];
+                        if (pt.delta < -0.1) { // Negative delta = drain (use threshold to avoid noise)
+                            // Drain detected
+                            if (sessionStart === null) {
+                                // Start new drain session
+                                sessionStart = i;
+                                sessionStartLevel = pt.prevLevel; // Level before drain started
+                                sessionStartTime = pt.timestamp;
+                            }
+                            sessionEndLevel = pt.level; // Current level
+                        } else {
+                            // Not draining - close session if one was active
+                            if (sessionStart !== null) {
+                                // Session ended - calculate VTrue for this drain event
+                                const fillRate = cauldronFillRates[id] ?? 1.0;
+                                const drainedRaw = sessionStartLevel - sessionEndLevel;
+                                // VTrue = raw drain + generation during drain (fill_rate × 15 min)
+                                const VTrue = drainedRaw + (fillRate * DRAIN_DURATION_MIN);
+                                events.push({
+                                    startTime: sessionStartTime,
+                                    startLevel: sessionStartLevel,
+                                    endLevel: sessionEndLevel,
+                                    drainedRaw: drainedRaw,
+                                    VTrue: VTrue,
+                                    fillRate: fillRate,
+                                    matched: false,
+                                    matchedTicket: null
+                                });
+                                sessionStart = null;
+                            }
+                        }
+                    }
+                    // Close last session if still active at end of day
+                    if (sessionStart !== null) {
+                        const fillRate = cauldronFillRates[id] ?? 1.0;
+                        const drainedRaw = sessionStartLevel - sessionEndLevel;
+                        const VTrue = drainedRaw + (fillRate * DRAIN_DURATION_MIN);
+                        events.push({
+                            startTime: sessionStartTime,
+                            startLevel: sessionStartLevel,
+                            endLevel: sessionEndLevel,
+                            drainedRaw: drainedRaw,
+                            VTrue: VTrue,
+                            fillRate: fillRate,
+                            matched: false,
+                            matchedTicket: null
+                        });
+                    }
+                    
+                    if (events.length > 0) {
+                        dailyDrainEvents[dateStr][id] = events;
+                    }
+                });
+            });
+            console.log('Detected individual drain events per day/cauldron:', dailyDrainEvents);
+        }
+
+        // Match tickets to drain events and annotate with discrepancy status
+        function annotateTicketDiscrepancies() {
+            if (!allTickets || !allTickets.length) return;
+            const TOLERANCE = 0.20; // 20% tolerance to account for measurement noise and timing differences
+            
+            console.log('=== TICKET-TO-DRAIN MATCHING ===');
+            
+            // Track discrepancy distribution for analysis
+            const discrepancies = [];
+            let totalTickets = 0;
+            let matchCount = 0;
+            let overCount = 0;
+            let underCount = 0;
+            let noDataCount = 0;
+            let unmatchedCount = 0;
+            
+            // Group tickets by date and cauldron
+            const ticketsByDateCauldron = {};
+            allTickets.forEach(t => {
+                // Normalize date format to YYYY-MM-DD
+                let normalizedDate = t.date;
+                if (normalizedDate && normalizedDate.includes('T')) {
+                    // If date has time component, extract just the date part
+                    normalizedDate = normalizedDate.slice(0, 10);
+                }
+                const key = `${normalizedDate}|${t.cauldron_id}`;
+                if (!ticketsByDateCauldron[key]) ticketsByDateCauldron[key] = [];
+                ticketsByDateCauldron[key].push(t);
+            });
+            
+            console.log('Ticket date/cauldron keys:', Object.keys(ticketsByDateCauldron).slice(0, 10));
+            console.log('Drain event dates:', Object.keys(dailyDrainEvents));
+            
+            // For each date/cauldron combo, match tickets to drain events
+            Object.keys(ticketsByDateCauldron).forEach(key => {
+                const [date, cauldronId] = key.split('|');
+                const tickets = ticketsByDateCauldron[key];
+                const drainEvents = dailyDrainEvents?.[date]?.[cauldronId] || [];
+                
+                if (drainEvents.length === 0) {
+                    // No drain data - mark all tickets as no-data
+                    console.log(`⚠️ No drain events found for ${date} | ${cauldronId} (${tickets.length} tickets)`);
+                    tickets.forEach(t => {
+                        t.discrepancy_status = 'no-data';
+                        t.discrepancy_diff = null;
+                        t.pct_discrepancy = null;
+                        t.matched_drain = null;
+                        noDataCount++;
+                        totalTickets++;
+                    });
+                    return;
+                }
+                
+                // Create a copy of drain events to track which are matched
+                const availableDrains = drainEvents.map((d, idx) => ({...d, idx}));
+                
+                // Sort tickets by amount (largest first) for better matching
+                const sortedTickets = [...tickets].sort((a, b) => b.amount_collected - a.amount_collected);
+                
+                // Match each ticket to the closest available drain event
+                sortedTickets.forEach(ticket => {
+                    totalTickets++;
+                    const VTicket = ticket.amount_collected || 0;
+                    
+                    // Find best matching drain event (closest VTrue to VTicket)
+                    let bestMatch = null;
+                    let bestDiff = Infinity;
+                    let bestIdx = -1;
+                    
+                    availableDrains.forEach((drain, idx) => {
+                        if (!drain.matched) {
+                            const diff = Math.abs(drain.VTrue - VTicket);
+                            if (diff < bestDiff) {
+                                bestDiff = diff;
+                                bestMatch = drain;
+                                bestIdx = idx;
+                            }
+                        }
+                    });
+                    
+                    if (bestMatch) {
+                        // Mark drain as matched
+                        availableDrains[bestIdx].matched = true;
+                        drainEvents[bestMatch.idx].matched = true;
+                        drainEvents[bestMatch.idx].matchedTicket = ticket.ticket_id;
+                        
+                        const VActual = bestMatch.VTrue;
+                        const diff = VTicket - VActual;
+                        const pctDisc = diff / VActual;
+                        
+                        ticket.discrepancy_diff = diff;
+                        ticket.pct_discrepancy = pctDisc;
+                        ticket.matched_drain = bestMatch.idx;
+                        ticket.drain_VTrue = VActual;
+                        
+                        // Track all discrepancies for distribution analysis
+                        discrepancies.push({
+                            ticket_id: ticket.ticket_id,
+                            pct: Math.abs(pctDisc),
+                            diff: diff
+                        });
+                        
+                        // Apply tolerance check
+                        if (Math.abs(pctDisc) <= TOLERANCE) {
+                            ticket.discrepancy_status = 'match';
+                            matchCount++;
+                        } else if (VTicket > VActual) {
+                            ticket.discrepancy_status = 'over-reported';
+                            overCount++;
+                            console.log(`🚨 OVER: Ticket ${ticket.ticket_id} | ${cauldronId} | VTicket: ${VTicket.toFixed(2)}L | VDrain: ${VActual.toFixed(2)}L | FillRate: ${bestMatch.fillRate.toFixed(2)}L/min | Diff: ${diff.toFixed(2)}L (${(pctDisc*100).toFixed(1)}%)`);
+                        } else {
+                            ticket.discrepancy_status = 'under-reported';
+                            underCount++;
+                            console.log(`🟡 UNDER: Ticket ${ticket.ticket_id} | ${cauldronId} | VTicket: ${VTicket.toFixed(2)}L | VDrain: ${VActual.toFixed(2)}L | FillRate: ${bestMatch.fillRate.toFixed(2)}L/min | Diff: ${diff.toFixed(2)}L (${(pctDisc*100).toFixed(1)}%)`);
+                        }
+                    } else {
+                        // No drain event to match - suspicious (ticket without corresponding drain)
+                        ticket.discrepancy_status = 'no-drain-match';
+                        ticket.discrepancy_diff = null;
+                        ticket.pct_discrepancy = null;
+                        ticket.matched_drain = null;
+                        unmatchedCount++;
+                        console.log(`⚠️ NO MATCH: Ticket ${ticket.ticket_id} | ${cauldronId} | VTicket: ${VTicket.toFixed(2)}L | No corresponding drain event found`);
+                    }
+                });
+                
+                // Log unmatched drain events (drains without tickets - potential missing tickets)
+                availableDrains.forEach((drain, idx) => {
+                    if (!drain.matched) {
+                        console.log(`📋 UNMATCHED DRAIN: ${date} | ${cauldronId} | VDrain: ${drain.VTrue.toFixed(2)}L | No corresponding ticket found`);
+                    }
+                });
+            });
+            
+            console.log(`\nSUMMARY: ${totalTickets} tickets | ✅ ${matchCount} match | 🚨 ${overCount} over | 🟡 ${underCount} under | ⚠️ ${unmatchedCount} no-drain | ❓ ${noDataCount} no-data`);
+            console.log(`Suspicious rate: ${((overCount + underCount + unmatchedCount) / totalTickets * 100).toFixed(1)}% (${overCount + underCount + unmatchedCount}/${totalTickets})`);
+            
+            // Log discrepancy distribution
+            if (discrepancies.length > 0) {
+                discrepancies.sort((a, b) => a.pct - b.pct);
+                const percentiles = [0.25, 0.50, 0.75, 0.90, 0.95];
+                console.log('\nDiscrepancy Distribution (% difference):');
+                percentiles.forEach(p => {
+                    const idx = Math.floor(discrepancies.length * p);
+                    const val = discrepancies[idx]?.pct || 0;
+                    console.log(`  ${(p*100).toFixed(0)}th percentile: ${(val*100).toFixed(1)}%`);
+                });
+                const maxDisc = discrepancies[discrepancies.length - 1];
+                console.log(`  Max: ${(maxDisc.pct*100).toFixed(1)}% (Ticket ${maxDisc.ticket_id})`);
+            }
+        }
+
+        // Extend suspicious logic to include excess/deficit discrepancies
+        // Flag tickets as suspicious per spec: over/under-reported beyond tolerance
         function isTicketSuspicious(ticket) {
-            // Check for suspicious flag
             if (ticket.is_suspicious || ticket.suspicious) return true;
-            
-            // Add other suspicious criteria here if needed
-            // For example: unusual routes, high amounts, etc.
-            
+            // Per spec: OVER-REPORTED and UNDER-REPORTED are both flagged
+            if (ticket.discrepancy_status === 'over-reported' || ticket.discrepancy_status === 'under-reported') return true;
             return false;
         }
         
@@ -1727,6 +2115,58 @@
             applyFiltersAndSort();
         }
         
+        // Update statistics panel
+        function updateStatistics() {
+            const statusCounts = {
+                match: 0,
+                'over-reported': 0,
+                'under-reported': 0,
+                'no-drain-match': 0,
+                'no-data': 0
+            };
+            
+            // Count tickets by status
+            filteredTickets.forEach(ticket => {
+                const status = ticket.discrepancy_status || 'no-data';
+                if (statusCounts.hasOwnProperty(status)) {
+                    statusCounts[status]++;
+                }
+            });
+            
+            const total = filteredTickets.length;
+            const suspicious = statusCounts['over-reported'] + statusCounts['under-reported'] + statusCounts['no-drain-match'];
+            const validMatches = statusCounts.match;
+            
+            // Determine color for suspicious rate
+            let suspiciousColor = '#66ff66'; // green
+            if (suspicious > total * 0.2) suspiciousColor = '#ff6666'; // red
+            else if (suspicious > total * 0.1) suspiciousColor = '#ffaa66'; // orange
+            else if (suspicious > total * 0.05) suspiciousColor = '#ffff66'; // yellow
+            
+            // Build stats HTML
+            const statsHTML = `
+                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 4px;">
+                    <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">✅ Match Tickets</div>
+                    <div style="color: #66ff66; font-size: 28px; font-weight: bold;">${validMatches}/${total}</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 4px;">
+                    <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">⚠️ Suspicious Tickets</div>
+                    <div style="color: ${suspiciousColor}; font-size: 28px; font-weight: bold;">${suspicious}/${total}</div>
+                    <div style="color: #aaa; font-size: 11px; margin-top: 3px;">Over: ${statusCounts['over-reported']} | Under: ${statusCounts['under-reported']} | No-Drain: ${statusCounts['no-drain-match']}</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 4px; opacity: 0.5;">
+                    <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">📈 [Future Metric]</div>
+                    <div style="color: #888; font-size: 28px; font-weight: bold;">-</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 4px; opacity: 0.5;">
+                    <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">📉 [Future Metric]</div>
+                    <div style="color: #888; font-size: 28px; font-weight: bold;">-</div>
+                </div>
+            `;
+            
+            document.getElementById('ticket-stats').innerHTML = statsHTML;
+        }
+        
         // Display tickets for current page
         function displayTickets() {
             const tbody = document.getElementById('ticket-tbody');
@@ -1738,6 +2178,9 @@
             
             const ticketsToShow = filteredTickets.slice(startIndex, endIndex);
             
+            // Update statistics
+            updateStatistics();
+            
             ticketsToShow.forEach(ticket => {
                 const row = document.createElement('tr');
                 const isSuspicious = isTicketSuspicious(ticket);
@@ -1745,14 +2188,21 @@
                 if (isSuspicious) {
                     row.classList.add('suspicious');
                 }
-                
+                // Status text per spec flags
+                let statusText = 'Unknown';
+                if (ticket.discrepancy_status === 'match') statusText = '✅ Match';
+                else if (ticket.discrepancy_status === 'over-reported') statusText = '🚨 Over-Reported';
+                else if (ticket.discrepancy_status === 'under-reported') statusText = '🟡 Under-Reported';
+                else if (ticket.discrepancy_status === 'no-drain-match') statusText = '⚠️ No Drain Match';
+                else if (ticket.discrepancy_status === 'no-data') statusText = '❓ No Historical Data';
+
                 row.innerHTML = `
                     <td>${ticket.ticket_id || 'N/A'}</td>
                     <td>${ticket.cauldron_id || 'N/A'}</td>
                     <td>${ticket.amount_collected ? ticket.amount_collected.toFixed(2) : 'N/A'}</td>
                     <td>${ticket.courier_id || 'N/A'}</td>
                     <td>${ticket.date || 'N/A'}</td>
-                    <td>${isSuspicious ? '<span class="suspicious-badge">SUSPICIOUS</span>' : 'Normal'}</td>
+                    <td>${isSuspicious ? '<span class=\"suspicious-badge\">SUSPICIOUS</span>' : statusText}</td>
                 `;
                 
                 tbody.appendChild(row);
@@ -1790,6 +2240,11 @@
                 if (cachedData && cachedData.length > 0) {
                     await loadLevelsAtIndex(cachedData.length - 1);
                 }
+
+                // After both data and tickets are ready, compute discrepancies and refresh view
+                computeDailyDrainEvents();
+                annotateTicketDiscrepancies();
+                applyFiltersAndSort();
             }
         }
         
