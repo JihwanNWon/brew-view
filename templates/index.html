@@ -1306,7 +1306,9 @@
     <div class="floating-potions" id="floating-potions"></div>
     
     <div class="header">
-        <img src="{{ url_for('static', filename='images/markers/spider.png') }}" alt="Spider" class="spider-img" style="position: absolute; top: 0px; left: 0px; width: 256px; height: 128px; z-index: 100;" />
+        <div class="spider-background">
+            <img src="{{ url_for('static', filename='images/markers/spider.png') }}" alt="Spider" class="spider-img" style="position: absolute; top: 0px; left: 0px; width: 256px; height: 128px; z-index: 100;" />
+        </div>
         <div class="brand">
             <img class="witch-head" src="{{ url_for('static', filename='images/markers/witchHead.png') }}" alt="Witch" />
             <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Brew View Logo" />
@@ -2105,7 +2107,7 @@
         function createFloatingPotions() {
             const container = document.getElementById('floating-potions');
             const potionTypes = ['potBabyBlue', 'potCream', 'potGreen', 'potMagenta', 'potNavyBlue', 'potPurple', 'potYellow'];
-            const numPotions = 8; // Not too many
+            const numPotions = 16; // Increased from 8
             
             // Split evenly between left and right
             const potionsPerSide = numPotions / 2;
@@ -2119,17 +2121,17 @@
                 // Alternate between left and right side
                 const isLeftSide = i < potionsPerSide;
                 if (isLeftSide) {
-                    // Left margin: 0-15% from left
-                    potion.style.left = Math.random() * 15 + '%';
+                    // Left margin: 0-10% from left (more skewed to edge)
+                    potion.style.left = Math.random() * 10 + '%';
                 } else {
-                    // Right margin: 85-100% from left
-                    potion.style.left = (85 + Math.random() * 15) + '%';
+                    // Right margin: 90-100% from left (more skewed to edge)
+                    potion.style.left = (90 + Math.random() * 10) + '%';
                 }
                 
-                // Evenly distribute vertically with some randomness
-                const basePosition = (i % potionsPerSide) * (100 / potionsPerSide);
-                const randomOffset = (Math.random() - 0.5) * (100 / potionsPerSide) * 0.5; // 50% variation
-                potion.style.top = Math.max(0, Math.min(100, basePosition + randomOffset)) + '%';
+                // Evenly distribute vertically with some randomness, avoiding header area (top 15%)
+                const basePosition = (i % potionsPerSide) * (85 / potionsPerSide) + 15; // Start at 15% to avoid header
+                const randomOffset = (Math.random() - 0.5) * (85 / potionsPerSide) * 0.5; // 50% variation
+                potion.style.top = Math.max(15, Math.min(100, basePosition + randomOffset)) + '%';
                 
                 // Random tilt between -45 and 45 degrees
                 const rotation = (Math.random() * 90 - 45);
