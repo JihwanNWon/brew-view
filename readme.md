@@ -35,7 +35,7 @@ Brew View is a Flask-based dashboard for real-time and historical monitoring of 
 ### Installation
 1. Open a terminal and navigate to the project directory  
    ```
-   cd /home/haker/PycharmProjects/brew-view
+   cd /path/to/PycharmProjects/brew-view
    ```
 2. Create a virtual environment (recommended)  
    ```
