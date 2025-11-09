@@ -39,9 +39,59 @@
             margin-top: 5px;
         }
         
+        /* Tabs */
+        .tabs {
+            max-width: 1400px;
+            margin: 20px auto 0;
+            padding: 0 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .tab {
+            background: #f5f5f5;
+            border: none;
+            padding: 12px 30px 15px 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            border-radius: 8px 8px 0 0;
+            transition: background 0.3s ease, color 0.3s ease;
+            position: relative;
+        }
+        
+        .tab:hover {
+            background: #e8e8e8;
+            color: #333;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
         .container {
             max-width: 1400px;
-            margin: 20px auto;
+            margin: 0 auto 20px;
             padding: 0 20px;
         }
         
@@ -178,8 +228,15 @@
         .timeline-controls {
             display: flex;
             gap: 10px;
+            justify-content: center;
             margin-top: 10px;
             flex-wrap: wrap;
+        }
+        
+        .show-btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
         }
         
         .timeline-btn {
@@ -228,6 +285,206 @@
             text-align: center;
         }
         
+        /* Ticket Logs Styles */
+        .ticket-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .ticket-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .ticket-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .ticket-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .ticket-table tr.suspicious {
+            background: #ffe6e6;
+        }
+        
+        .ticket-table tr.suspicious:hover {
+            background: #ffd6d6;
+        }
+        
+        .suspicious-badge {
+            background: #ff4444;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .pagination button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination button:hover:not(:disabled) {
+            opacity: 0.9;
+        }
+        
+        .pagination span {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        /* Ticket Filters */
+        .ticket-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        /* Dropdown checkbox container */
+        .dropdown-filter {
+            position: relative;
+            width: 180px;
+        }
+
+        .dropdown-filter-toggle {
+            padding: 8px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .dropdown-filter-toggle:hover {
+            background: #f3f6ff;
+        }
+
+        .dropdown-filter-menu {
+            position: absolute;
+            top: 105%;
+            left: 0;
+            z-index: 50;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            max-height: 260px;
+            overflow-y: auto;
+            padding: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            display: none;
+            width: 100%;
+        }
+
+        .dropdown-filter.open .dropdown-filter-menu {
+            display: block;
+        }
+
+        /* Avoid nested scrollbars: let the menu scroll, not inner list */
+        .dropdown-filter-menu .checkbox-group {
+            max-height: none;
+            overflow: visible;
+            border: none;
+            padding: 0;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 8px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .checkbox-group {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            padding: 8px;
+            background: white;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            font-weight: normal;
+            color: #333;
+            font-size: 13px;
+            cursor: pointer;
+            margin: 0;
+        }
+        
+        .filter-group button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 23px;
+        }
+        
+        .filter-group button:hover {
+            opacity: 0.9;
+        }
+        
         /* Custom marker styles */
         .cauldron-marker {
             background: white;
@@ -260,12 +517,20 @@
         <p>Potion Flow Monitoring Dashboard</p>
     </div>
     
-    <div class="container">
-        <div class="map-container">
-            <h2>📍 Cauldron Network Map</h2>
-            <div id="loading" class="loading">Loading cauldron data...</div>
-            <div id="map"></div>
-        </div>
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('map')">📍 Map</button>
+        <button class="tab" onclick="switchTab('tickets')">🎫 Ticket Logs</button>
+    </div>
+    
+    <!-- Map Tab Content -->
+    <div id="map-tab" class="tab-content active">
+        <div class="container">
+            <div class="map-container">
+                <h2>📍 Cauldron Network Map</h2>
+                <div id="loading" class="loading">Loading cauldron data...</div>
+                <div id="map"></div>
+            </div>
         
         <div class="timeline-container">
             <h2>⏱️ Historical Timeline</h2>
@@ -322,17 +587,21 @@
                     </div>
                     <input type="range" class="timeline-slider" id="time-slider" 
                            min="0" max="0" value="0" step="1" disabled>
+                    
+                    <!-- Playback Controls centered underneath timeline -->
+                    <div class="timeline-controls">
+                        <button class="timeline-btn" id="btn-first">⏮️ First</button>
+                        <button class="timeline-btn" id="btn-prev">⏪ Previous</button>
+                        <button class="timeline-btn" id="btn-play">▶️ Play</button>
+                        <button class="timeline-btn" id="btn-next">Next ⏩</button>
+                        <button class="timeline-btn" id="btn-last">⏭️ Last</button>
+                    </div>
                 </div>
             </div>
             
-            <!-- Show Button and Controls underneath -->
-            <div class="timeline-controls">
+            <!-- Show Button -->
+            <div class="show-btn-container">
                 <button class="timeline-btn show-btn" id="btn-show">🔍 Show</button>
-                <button class="timeline-btn" id="btn-first">⏮️ First</button>
-                <button class="timeline-btn" id="btn-prev">⏪ Previous</button>
-                <button class="timeline-btn" id="btn-play">▶️ Play</button>
-                <button class="timeline-btn" id="btn-next">Next ⏩</button>
-                <button class="timeline-btn" id="btn-last">⏭️ Last</button>
             </div>
         </div>
         
@@ -342,12 +611,180 @@
                 <!-- Stats will be populated by JavaScript -->
             </div>
         </div>
+        </div>
+    </div>
+    
+    <!-- Ticket Logs Tab Content -->
+    <div id="tickets-tab" class="tab-content">
+        <div class="container">
+            <div class="info-panel">
+                <h2>🎫 Ticket Logs</h2>
+                <div id="ticket-loading" class="loading">Loading tickets...</div>
+                <div id="ticket-container" style="display: none;">
+                    <!-- Filters and Sorting -->
+                    <div class="ticket-filters">
+                        <div class="filter-group">
+                            <label for="sort-by">Sort By:</label>
+                            <select id="sort-by" onchange="applyFiltersAndSort()">
+                                <option value="date-desc">Date (Newest First)</option>
+                                <option value="date-asc">Date (Oldest First)</option>
+                                <option value="amount-desc">Amount (High to Low)</option>
+                                <option value="amount-asc">Amount (Low to High)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Cauldrons:</label>
+                            <div class="dropdown-filter" id="cauldron-dropdown">
+                                <div class="dropdown-filter-toggle" onclick="toggleFilterDropdown('cauldron-dropdown')">
+                                    <span id="cauldron-dropdown-label">All Cauldrons</span>
+                                    <span>▾</span>
+                                </div>
+                                <div class="dropdown-filter-menu">
+                                    <div class="checkbox-group" id="filter-cauldron-container"><!-- populated dynamically --></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Couriers:</label>
+                            <div class="dropdown-filter" id="courier-dropdown">
+                                <div class="dropdown-filter-toggle" onclick="toggleFilterDropdown('courier-dropdown')">
+                                    <span id="courier-dropdown-label">All Couriers</span>
+                                    <span>▾</span>
+                                </div>
+                                <div class="dropdown-filter-menu">
+                                    <div class="checkbox-group" id="filter-courier-container"><!-- populated dynamically --></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="filter-date">Date:</label>
+                            <input type="date" id="filter-date" onchange="applyFiltersAndSort()">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Status:</label>
+                            <div class="dropdown-filter" id="status-dropdown">
+                                <div class="dropdown-filter-toggle" onclick="toggleFilterDropdown('status-dropdown')">
+                                    <span id="status-dropdown-label">All Statuses</span>
+                                    <span>▾</span>
+                                </div>
+                                <div class="dropdown-filter-menu">
+                                    <div class="checkbox-group" id="filter-status-container">
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="status-normal" value="normal" checked onchange="applyFiltersAndSort();updateDropdownLabels()">
+                                            <label for="status-normal">Normal</label>
+                                        </div>
+                                        <div class="checkbox-item">
+                                            <input type="checkbox" id="status-suspicious" value="suspicious" checked onchange="applyFiltersAndSort();updateDropdownLabels()">
+                                            <label for="status-suspicious">Suspicious</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <button onclick="resetFilters()">Reset Filters</button>
+                        </div>
+                    </div>
+                    
+                    <table class="ticket-table" id="ticket-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Cauldron</th>
+                                <th>Amount Collected</th>
+                                <th>Courier</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ticket-tbody">
+                            <!-- Tickets will be populated here -->
+                        </tbody>
+                    </table>
+                    <div class="pagination">
+                        <button id="ticket-prev" onclick="changeTicketPage(-1)">⏪ Previous</button>
+                        <span id="ticket-page-info">Page 1 of 1</span>
+                        <button id="ticket-next" onclick="changeTicketPage(1)">Next ⏩</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
+        // Tab switching function
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // If switching to map tab, invalidate size to fix rendering issues
+            if (tabName === 'map' && map) {
+                setTimeout(() => map.invalidateSize(), 100);
+            }
+        }
+
+        // Dropdown checkbox helpers
+        function toggleFilterDropdown(id) {
+            const dd = document.getElementById(id);
+            const isOpen = dd.classList.contains('open');
+            // Close all first
+            document.querySelectorAll('.dropdown-filter.open').forEach(el => el.classList.remove('open'));
+            if (!isOpen) dd.classList.add('open');
+        }
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', (e) => {
+            const anyDropdown = e.target.closest('.dropdown-filter');
+            const anyToggle = e.target.closest('.dropdown-filter-toggle');
+            if (!anyDropdown && !anyToggle) {
+                document.querySelectorAll('.dropdown-filter.open').forEach(el => el.classList.remove('open'));
+            }
+        });
+
+        // Removed search and select-all/none per updated requirements
+
+        function updateDropdownLabels() {
+            // Cauldrons
+            const cbsC = Array.from(document.querySelectorAll('#filter-cauldron-container input[type="checkbox"]'));
+            const selectedC = cbsC.filter(cb => cb.checked).map(cb => cb.value);
+            const cLabel = document.getElementById('cauldron-dropdown-label');
+            cLabel.textContent = selectedC.length === cbsC.length ? 'All Cauldrons' : (selectedC.slice(0,3).join(', ') + (selectedC.length>3 ? ` +${selectedC.length-3}` : '')) || 'None';
+
+            // Couriers
+            const cbsR = Array.from(document.querySelectorAll('#filter-courier-container input[type="checkbox"]'));
+            const selectedR = cbsR.filter(cb => cb.checked).map(cb => cb.value);
+            const rLabel = document.getElementById('courier-dropdown-label');
+            rLabel.textContent = selectedR.length === cbsR.length ? 'All Couriers' : (selectedR.slice(0,3).join(', ') + (selectedR.length>3 ? ` +${selectedR.length-3}` : '')) || 'None';
+
+            // Status
+            const cbsS = Array.from(document.querySelectorAll('#filter-status-container input[type="checkbox"]'));
+            const selectedS = cbsS.filter(cb => cb.checked).map(cb => cb.value);
+            const sLabel = document.getElementById('status-dropdown-label');
+            const pretty = { normal: 'Normal', suspicious: 'Suspicious' };
+            sLabel.textContent = selectedS.length === cbsS.length ? 'All Statuses' : (selectedS.map(v => pretty[v] || v).join(', ') || 'None');
+        }
+        
         let map;
         let cauldrons = [];
         let market = null;
@@ -364,6 +801,12 @@
         let cachedData = null; // Cache all historical data
         let isDataLoaded = false;
         let selectedTimezone = 'UTC'; // Default timezone
+        
+        // Ticket pagination
+        let allTickets = [];
+        let filteredTickets = [];
+        let currentTicketPage = 1;
+        let ticketsPerPage = 10;
         
         // Initialize map
         function initMap() {
@@ -1102,6 +1545,232 @@
             }
         }
         
+        // Load tickets from API
+        async function loadTickets() {
+            try {
+                const response = await fetch('/api/tickets');
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Could not load tickets:', data.error);
+                    document.getElementById('ticket-loading').textContent = 'Error loading tickets';
+                    return false;
+                }
+                
+                // API returns {metadata, transport_tickets}
+                allTickets = data.transport_tickets || [];
+                filteredTickets = [...allTickets]; // Initialize filtered tickets
+                
+                console.log('Loaded', allTickets.length, 'tickets');
+                console.log('Metadata:', data.metadata);
+                console.log('Sample ticket:', allTickets[0]);
+                
+                populateFilterDropdowns();
+                displayTickets();
+                document.getElementById('ticket-loading').style.display = 'none';
+                document.getElementById('ticket-container').style.display = 'block';
+                
+                return true;
+            } catch (error) {
+                console.error('Error loading tickets:', error);
+                document.getElementById('ticket-loading').textContent = 'Error loading tickets';
+                return false;
+            }
+        }
+        
+        // Check if a ticket is suspicious
+        function isTicketSuspicious(ticket) {
+            // Check for suspicious flag
+            if (ticket.is_suspicious || ticket.suspicious) return true;
+            
+            // Add other suspicious criteria here if needed
+            // For example: unusual routes, high amounts, etc.
+            
+            return false;
+        }
+        
+        // Populate filter checkboxes with unique values
+        function populateFilterDropdowns() {
+            const cauldrons = [...new Set(allTickets.map(t => t.cauldron_id))].sort();
+            const couriers = [...new Set(allTickets.map(t => t.courier_id))].sort();
+            
+            const cauldronContainer = document.getElementById('filter-cauldron-container');
+            cauldrons.forEach(cauldron => {
+                const item = document.createElement('div');
+                item.className = 'checkbox-item';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = cauldron;
+                checkbox.id = `cauldron-${cauldron}`;
+                checkbox.checked = true;
+                checkbox.onchange = function(){ applyFiltersAndSort(); updateDropdownLabels(); };
+
+                const labelEl = document.createElement('label');
+                labelEl.setAttribute('for', checkbox.id);
+                labelEl.textContent = cauldron;
+
+                item.appendChild(checkbox);
+                item.appendChild(labelEl);
+                cauldronContainer.appendChild(item);
+            });
+            
+            const courierContainer = document.getElementById('filter-courier-container');
+            couriers.forEach(courier => {
+                const item = document.createElement('div');
+                item.className = 'checkbox-item';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = courier;
+                checkbox.id = `courier-${courier}`;
+                checkbox.checked = true;
+                checkbox.onchange = function(){ applyFiltersAndSort(); updateDropdownLabels(); };
+
+                const labelEl = document.createElement('label');
+                labelEl.setAttribute('for', checkbox.id);
+                labelEl.textContent = courier;
+
+                item.appendChild(checkbox);
+                item.appendChild(labelEl);
+                courierContainer.appendChild(item);
+            });
+            updateDropdownLabels();
+        }
+        
+        // Apply filters and sorting
+        function applyFiltersAndSort() {
+            const sortBy = document.getElementById('sort-by').value;
+            // Get selected cauldrons
+            const selectedCauldrons = Array.from(document.querySelectorAll('#filter-cauldron-container input:checked'))
+                .map(cb => cb.value);
+            
+            // Get selected couriers
+            const selectedCouriers = Array.from(document.querySelectorAll('#filter-courier-container input:checked'))
+                .map(cb => cb.value);
+            
+            const filterDate = document.getElementById('filter-date').value;
+            
+            // Get selected statuses
+            const selectedStatuses = Array.from(document.querySelectorAll('#filter-status-container input:checked'))
+                .map(cb => cb.value);
+            
+            // Start with all tickets
+            filteredTickets = [...allTickets];
+            
+            // Apply cauldron filter (if any selected)
+            if (selectedCauldrons.length > 0) {
+                filteredTickets = filteredTickets.filter(t => selectedCauldrons.includes(t.cauldron_id));
+            }
+            
+            // Apply courier filter (if any selected)
+            if (selectedCouriers.length > 0) {
+                filteredTickets = filteredTickets.filter(t => selectedCouriers.includes(t.courier_id));
+            }
+            
+            if (filterDate) {
+                filteredTickets = filteredTickets.filter(t => t.date === filterDate);
+            }
+            
+            // Apply status filter
+            if (selectedStatuses.length > 0 && selectedStatuses.length < 2) {
+                // Only filter if not all statuses are selected
+                if (selectedStatuses.includes('suspicious')) {
+                    filteredTickets = filteredTickets.filter(t => isTicketSuspicious(t));
+                } else if (selectedStatuses.includes('normal')) {
+                    filteredTickets = filteredTickets.filter(t => !isTicketSuspicious(t));
+                }
+            }
+            
+            // Apply sorting
+            switch(sortBy) {
+                case 'date-desc':
+                    filteredTickets.sort((a, b) => b.date.localeCompare(a.date));
+                    break;
+                case 'date-asc':
+                    filteredTickets.sort((a, b) => a.date.localeCompare(b.date));
+                    break;
+                case 'amount-desc':
+                    filteredTickets.sort((a, b) => b.amount_collected - a.amount_collected);
+                    break;
+                case 'amount-asc':
+                    filteredTickets.sort((a, b) => a.amount_collected - b.amount_collected);
+                    break;
+            }
+            
+            // Reset to first page
+            currentTicketPage = 1;
+            displayTickets();
+        }
+        
+        // Reset all filters
+        function resetFilters() {
+            document.getElementById('sort-by').value = 'date-desc';
+            document.getElementById('filter-date').value = '';
+            
+            // Check all cauldron checkboxes
+            document.querySelectorAll('#filter-cauldron-container input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+            });
+            
+            // Check all courier checkboxes
+            document.querySelectorAll('#filter-courier-container input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+            });
+            
+            // Check all status checkboxes
+            document.querySelectorAll('#filter-status-container input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+            });
+            
+            updateDropdownLabels();
+            applyFiltersAndSort();
+        }
+        
+        // Display tickets for current page
+        function displayTickets() {
+            const tbody = document.getElementById('ticket-tbody');
+            tbody.innerHTML = '';
+            
+            const totalPages = Math.ceil(filteredTickets.length / ticketsPerPage);
+            const startIndex = (currentTicketPage - 1) * ticketsPerPage;
+            const endIndex = Math.min(startIndex + ticketsPerPage, filteredTickets.length);
+            
+            const ticketsToShow = filteredTickets.slice(startIndex, endIndex);
+            
+            ticketsToShow.forEach(ticket => {
+                const row = document.createElement('tr');
+                const isSuspicious = isTicketSuspicious(ticket);
+                
+                if (isSuspicious) {
+                    row.classList.add('suspicious');
+                }
+                
+                row.innerHTML = `
+                    <td>${ticket.ticket_id || 'N/A'}</td>
+                    <td>${ticket.cauldron_id || 'N/A'}</td>
+                    <td>${ticket.amount_collected ? ticket.amount_collected.toFixed(2) : 'N/A'}</td>
+                    <td>${ticket.courier_id || 'N/A'}</td>
+                    <td>${ticket.date || 'N/A'}</td>
+                    <td>${isSuspicious ? '<span class="suspicious-badge">SUSPICIOUS</span>' : 'Normal'}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+            
+            // Update pagination
+            document.getElementById('ticket-page-info').textContent = `Page ${currentTicketPage} of ${totalPages}`;
+            document.getElementById('ticket-prev').disabled = currentTicketPage === 1;
+            document.getElementById('ticket-next').disabled = currentTicketPage === totalPages;
+        }
+        
+        // Change ticket page
+        function changeTicketPage(delta) {
+            const totalPages = Math.ceil(allTickets.length / ticketsPerPage);
+            currentTicketPage = Math.max(1, Math.min(totalPages, currentTicketPage + delta));
+            displayTickets();
+        }
+        
         // Main initialization
         async function init() {
             initMap();
@@ -1110,6 +1779,7 @@
             const marketLoaded = await loadMarket();
             const networkLoaded = await loadNetwork();
             const timestampsLoaded = await loadTimestamps();
+            const ticketsLoaded = await loadTickets();
             
             if (cauldronsLoaded && timestampsLoaded) {
                 document.getElementById('loading').style.display = 'none';
