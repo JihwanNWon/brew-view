@@ -756,6 +756,19 @@
             font-weight: bold;
             padding: 10px 30px;
         }
+
+        /* Wiggle animation for show button */
+        @keyframes wiggle {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(2deg) scale(1.02); }
+            50% { transform: rotate(0deg) scale(1.03); }
+            75% { transform: rotate(-2deg) scale(1.02); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        .show-btn.wiggle {
+            animation: wiggle 2s ease-in-out infinite;
+        }
         
         .timestamp-display {
             font-size: 1.1em;
@@ -1361,7 +1374,7 @@
             
             <!-- Show Button -->
             <div class="show-btn-container">
-                <button class="timeline-btn show-btn" id="btn-show">🔍 Show</button>
+                <button class="timeline-btn show-btn wiggle" id="btn-show">🔍 Show</button>
             </div>
         </div>
         
@@ -1509,7 +1522,7 @@
                     
                     <!-- Show Button -->
                     <div class="show-btn-container">
-                        <button class="timeline-btn show-btn" id="btn-show-3d">🔍 Show</button>
+                        <button class="timeline-btn show-btn wiggle" id="btn-show-3d">🔍 Show</button>
                     </div>
                 </div>
             </div>
@@ -3079,7 +3092,10 @@
             });
             
             // Show button
-            btnShow.addEventListener('click', showSelectedData);
+            btnShow.addEventListener('click', function() {
+                btnShow.classList.remove('wiggle');
+                showSelectedData();
+            });
             
             // Time slider change
             slider.addEventListener('input', function() {
@@ -3221,7 +3237,10 @@
                 });
                 
                 // Show button
-                btnShow.addEventListener('click', show3DSelectedData);
+                btnShow.addEventListener('click', function() {
+                    btnShow.classList.remove('wiggle');
+                    show3DSelectedData();
+                });
                 
                 // Time slider change
                 slider.addEventListener('input', function() {
