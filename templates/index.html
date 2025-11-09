@@ -42,12 +42,13 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #120b2f 0%, #1a0f3d 50%, #0f0a28 100%);
+            background: linear-gradient(135deg, #0a0614 0%, #0f0820 50%, #050308 100%);
             background-attachment: fixed;
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
             transition: background 0.5s ease, color 0.5s ease;
+            color: #ffffff;
         }
 
         /* Light mode styles */
@@ -131,6 +132,16 @@
             backdrop-filter: blur(15px);
         }
 
+        /* Spider image styling */
+        .spider-img {
+            background: transparent;
+            transition: opacity 0.3s ease;
+        }
+
+        body.light-mode .spider-img {
+            opacity: 0.6;
+        }
+
         body.light-mode .info-panel h2,
         body.light-mode .map-container h2,
         body.light-mode .bar-chart-container h2,
@@ -141,82 +152,6 @@
 
         body.light-mode .loading {
             color: #5e35b1;
-        }
-
-        /* Light mode ticket table styles */
-        body.light-mode .ticket-table td {
-            color: #333;
-            border-bottom: 1px solid #bdbdbd;
-        }
-
-        body.light-mode .ticket-table tr:hover {
-            background: #e3f2fd;
-        }
-
-        body.light-mode .ticket-table tr.suspicious {
-            background: #ffcdd2;
-        }
-
-        body.light-mode .ticket-table tr.suspicious:hover {
-            background: #ef9a9a;
-        }
-
-        /* Chart container styles */
-        .chart-container {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-
-        body.light-mode .chart-container {
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        .chart-container h3 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
-        body.light-mode .chart-container h3 {
-            color: #5e35b1;
-        }
-
-        body.light-mode .chart-container p {
-            color: #424242 !important;
-        }
-
-        /* Dark mode fixes for readability */
-        body:not(.light-mode) .bar-chart-container {
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        body:not(.light-mode) .bar-chart-container h2 {
-            color: white;
-        }
-
-        body:not(.light-mode) .map-container h2 {
-            color: white;
-        }
-
-        body:not(.light-mode) .ticket-table td {
-            color: white;
-        }
-
-        body:not(.light-mode) .ticket-table th {
-            color: white;
-        }
-
-        body:not(.light-mode) .chart-container p {
-            color: white !important;
-        }
-
-        body:not(.light-mode) .chart-container strong {
-            color: white;
-        }
-
-        body:not(.light-mode) .stats {
-            color: white;
         }
 
         /* Animated gradient background */
@@ -281,7 +216,7 @@
         }
         
         .header {
-            background: rgba(42, 23, 63, 0.7);
+            background: rgba(15, 8, 25, 0.85);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             padding: 20px;
@@ -302,23 +237,23 @@
         }
 
         .header h1 {
-            color: #667eea;
+            color: #a78bfa;
             text-align: center;
             font-size: 72px;
             line-height: 90px;
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 2px;
-            text-shadow: 0 0 20px rgba(102, 126, 234, 0.8), 0 0 40px rgba(102, 126, 234, 0.4);
+            text-shadow: 0 0 20px rgba(167, 139, 250, 0.8), 0 0 40px rgba(167, 139, 250, 0.4);
             animation: glow 3s ease-in-out infinite;
         }
 
         @keyframes glow {
             0%, 100% {
-                text-shadow: 0 0 20px rgba(102, 126, 234, 0.8), 0 0 40px rgba(102, 126, 234, 0.4);
+                text-shadow: 0 0 20px rgba(167, 139, 250, 0.8), 0 0 40px rgba(167, 139, 250, 0.4);
             }
             50% {
-                text-shadow: 0 0 30px rgba(102, 126, 234, 1), 0 0 60px rgba(102, 126, 234, 0.6);
+                text-shadow: 0 0 30px rgba(167, 139, 250, 1), 0 0 60px rgba(167, 139, 250, 0.6);
             }
         }
         .brand {
@@ -353,7 +288,7 @@
         
         .header p {
             text-align: center;
-            color: rgba(255,255,255,0.85);
+            color: rgba(255, 255, 255, 0.95);
             margin-top: 5px;
         }
         
@@ -379,7 +314,7 @@
         }
 
         .tab {
-            background: rgba(245, 245, 245, 0.1);
+            background: rgba(30, 20, 40, 0.4);
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -387,7 +322,7 @@
             cursor: pointer;
             font-size: 16px;
             font-weight: 500;
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.85);
             border-radius: 8px 8px 0 0;
             transition: all 0.3s ease;
             position: relative;
@@ -410,17 +345,17 @@
         }
 
         .tab:hover {
-            background: rgba(245, 245, 245, 0.15);
-            color: rgba(255, 255, 255, 0.9);
+            background: rgba(40, 30, 50, 0.6);
+            color: rgba(255, 255, 255, 1);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .tab.active {
-            background: rgba(230, 230, 234, 0.2);
-            color: #667eea;
+            background: rgba(50, 40, 70, 0.7);
+            color: #a78bfa;
             border-bottom: none;
-            box-shadow: 0 -4px 12px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 -4px 12px rgba(167, 139, 250, 0.3);
         }
 
         .tab.active::after {
@@ -459,7 +394,7 @@
         }
         
         .map-container {
-            background: rgba(230, 230, 234, 0.15);
+            background: rgba(20, 15, 30, 0.6);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 0 10px 10px 10px;
@@ -491,7 +426,7 @@
         }
         
         .info-panel {
-            background: rgba(230, 230, 234, 0.15);
+            background: rgba(20, 15, 30, 0.6);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 0 10px 10px 10px;
@@ -507,8 +442,8 @@
         }
 
         .info-panel h2 {
-            color: rgba(255, 255, 255, 0.95);
-            text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+            color: rgba(255, 255, 255, 0.98);
+            text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
         }
         
         .stats {
@@ -549,7 +484,7 @@
         
         /* Bar chart for cauldron levels */
         .bar-chart-container {
-            background: rgba(230, 230, 234, 0.15);
+            background: rgba(20, 15, 30, 0.6);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 0 10px 10px 10px;
@@ -566,8 +501,8 @@
         }
 
         .bar-chart-container h2 {
-            color: rgba(255, 255, 255, 0.95);
-            text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+            color: rgba(255, 255, 255, 0.98);
+            text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
         }
         
         .bar-chart {
@@ -692,7 +627,7 @@
         
         /* Timeline Slider */
         .timeline-container {
-            background: rgba(230, 230, 234, 0.15);
+            background: rgba(20, 15, 30, 0.6);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 10px;
@@ -710,8 +645,8 @@
 
         .timeline-container h2 {
             margin-bottom: 20px;
-            color: rgba(255, 255, 255, 0.95);
-            text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+            color: rgba(255, 255, 255, 0.98);
+            text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
         }
         
         .date-selector {
@@ -1149,7 +1084,7 @@
 
         /* 3D Visualization Styles */
         .threejs-container {
-            background: rgba(230, 230, 234, 0.15);
+            background: rgba(20, 15, 30, 0.6);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-radius: 0 10px 10px 10px;
@@ -1166,8 +1101,8 @@
         }
 
         .threejs-container h2 {
-            color: rgba(255, 255, 255, 0.95);
-            text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+            color: rgba(255, 255, 255, 0.98);
+            text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
             margin-bottom: 15px;
         }
 
@@ -1329,6 +1264,7 @@
         <button id="theme-toggle" onclick="toggleTheme()" style="position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: all 0.3s ease; z-index: 100;">
             🌙 Dark Mode
         </button>
+        <img src="{{ url_for('static', filename='images/markers/spider.png') }}" alt="Spider" class="spider-img" style="position: absolute; top: 0px; left: 0px; width: 256px; height: 128px; z-index: 100;" />
         <div class="brand">
             <img class="witch-head" src="{{ url_for('static', filename='images/markers/witchHead.png') }}" alt="Witch" />
             <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Brew View Logo" />
@@ -1504,24 +1440,76 @@
                 </div>
 
                 <!-- Historical Timeline Scrubber for 3D Visualization -->
-                <div class="time-slider-container" style="margin-top: 20px;">
-                    <h3 style="color: #667eea; margin-bottom: 10px;">⏱️ Historical Timeline</h3>
-                    <div class="time-label">Time of Day:</div>
-                    <div class="timeline-info">
-                        <div>
-                            <span class="timestamp-display" id="current-timestamp-3d">Select a date...</span>
+                <div class="timeline-container" style="margin-top: 20px;">
+                    <h2><img src="{{ url_for('static', filename='images/markers/hourglass.png') }}" alt="Timeline" class="inline-icon"> Historical Timeline</h2>
+                    
+                    <!-- Date and Time Selection Row -->
+                    <div class="slider-row">
+                        <!-- Date Selectors on the left -->
+                        <div class="date-selector">
+                            <div class="date-group">
+                                <label for="year-select-3d">Year</label>
+                                <select id="year-select-3d">
+                                    <option value="">Loading...</option>
+                                </select>
+                            </div>
+                            <div class="date-group">
+                                <label for="month-select-3d">Month</label>
+                                <select id="month-select-3d">
+                                    <option value="">Select year first</option>
+                                </select>
+                            </div>
+                            <div class="date-group">
+                                <label for="day-select-3d">Day</label>
+                                <select id="day-select-3d">
+                                    <option value="">Select month first</option>
+                                </select>
+                            </div>
+                            <div class="date-group">
+                                <label for="timezone-select-3d">Timezone</label>
+                                <select id="timezone-select-3d">
+                                    <option value="UTC">UTC</option>
+                                    <option value="America/New_York">Eastern (ET)</option>
+                                    <option value="America/Chicago">Central (CT)</option>
+                                    <option value="America/Denver">Mountain (MT)</option>
+                                    <option value="America/Los_Angeles">Pacific (PT)</option>
+                                    <option value="America/Phoenix">Arizona (MST)</option>
+                                    <option value="America/Anchorage">Alaska (AKT)</option>
+                                    <option value="Pacific/Honolulu">Hawaii (HST)</option>
+                                    <option value="Europe/London">London (GMT/BST)</option>
+                                    <option value="Europe/Paris">Paris (CET)</option>
+                                    <option value="Asia/Tokyo">Tokyo (JST)</option>
+                                    <option value="Asia/Shanghai">Shanghai (CST)</option>
+                                    <option value="Australia/Sydney">Sydney (AEDT)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Time Slider on the right -->
+                        <div class="slider-section">
+                            <div class="time-label">Time of Day:</div>
+                            <div class="timeline-info">
+                                <div>
+                                    <span class="timestamp-display" id="current-timestamp-3d">Select a date...</span>
+                                </div>
+                            </div>
+                            <input type="range" class="timeline-slider" id="time-slider-3d"
+                                   min="0" max="0" value="0" step="1" disabled>
+                            
+                            <!-- Playback Controls centered underneath timeline -->
+                            <div class="timeline-controls">
+                                <button class="timeline-btn" id="btn-first-3d">⏮️ First</button>
+                                <button class="timeline-btn" id="btn-prev-3d">⏪ Previous</button>
+                                <button class="timeline-btn" id="btn-play-3d">▶️ Play</button>
+                                <button class="timeline-btn" id="btn-next-3d">Next ⏩</button>
+                                <button class="timeline-btn" id="btn-last-3d">⏭️ Last</button>
+                            </div>
                         </div>
                     </div>
-                    <input type="range" class="timeline-slider" id="time-slider-3d"
-                           min="0" max="0" value="0" step="1" disabled>
-
-                    <!-- Playback Controls centered underneath timeline -->
-                    <div class="timeline-controls">
-                        <button class="timeline-btn" id="btn-first-3d">⏮️ First</button>
-                        <button class="timeline-btn" id="btn-prev-3d">⏪ Previous</button>
-                        <button class="timeline-btn" id="btn-play-3d">▶️ Play</button>
-                        <button class="timeline-btn" id="btn-next-3d">Next ⏩</button>
-                        <button class="timeline-btn" id="btn-last-3d">⏭️ Last</button>
+                    
+                    <!-- Show Button -->
+                    <div class="show-btn-container">
+                        <button class="timeline-btn show-btn" id="btn-show-3d">🔍 Show</button>
                     </div>
                 </div>
             </div>
@@ -1730,8 +1718,8 @@
                     </div>
                     
                     <!-- Courier Performance -->
-                    <div class="chart-container">
-                        <h3>🚚 Courier Performance</h3>
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">🚚 Courier Performance</h3>
                         <div style="margin-bottom: 20px;">
                             <canvas id="courier-performance-chart" style="max-height: 400px;"></canvas>
                         </div>
@@ -1753,8 +1741,8 @@
                     </div>
                     
                     <!-- Cauldron Efficiency -->
-                    <div class="chart-container">
-                        <h3>⚗️ Cauldron Efficiency</h3>
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">⚗️ Cauldron Efficiency</h3>
                         <div style="margin-bottom: 20px;">
                             <canvas id="cauldron-efficiency-chart" style="max-height: 400px;"></canvas>
                         </div>
@@ -1775,8 +1763,8 @@
                     </div>
                     
                     <!-- Route Efficiency -->
-                    <div class="chart-container">
-                        <h3>🛣️ Network Efficiency</h3>
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">🛣️ Network Efficiency</h3>
                         <div class="stats" id="network-stats">
                             <!-- Network stats will be populated here -->
                         </div>
@@ -1795,8 +1783,8 @@
                 <div id="optimization-container">
                     
                     <!-- Introduction -->
-                    <div class="chart-container">
-                        <h3>📋 Objective</h3>
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">📋 Objective</h3>
                         <p style="color: #666; margin-bottom: 10px;">
                             Calculate the minimum number of witches needed to ensure <strong>no cauldron ever overflows</strong>, 
                             even well into the future. This system accounts for each cauldron's fill rate and creates a 
@@ -1810,20 +1798,20 @@
                     <!-- Results Summary -->
                     <div id="optimization-results" style="display: none;">
                         <!-- Witch Count & Stats -->
-                        <div class="chart-container">
-                            <h3>📊 Optimization Results</h3>
+                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">📊 Optimization Results</h3>
                             <div class="stats" id="optimization-stats"></div>
                         </div>
                         
                         <!-- Route Map -->
-                        <div class="chart-container">
-                            <h3>🗺️ Optimized Routes</h3>
+                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">🗺️ Optimized Routes</h3>
                             <div id="route-map" style="height: 500px; border-radius: 10px; border: 2px solid #667eea;"></div>
                         </div>
                         
                         <!-- Daily Schedule -->
-                        <div class="chart-container">
-                            <h3>🧙 Daily Witch Schedule (24-Hour View)</h3>
+                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">🧙 Daily Witch Schedule (24-Hour View)</h3>
                             <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
                                 <strong>Note:</strong> Each witch's routes throughout a 24-hour period. Multiple witches may visit the same cauldron at different times.
                             </p>
@@ -1847,8 +1835,8 @@
                         </div>
                         
                         <!-- Cauldron Analysis -->
-                        <div class="chart-container">
-                            <h3>🔮 Cauldron Fill Analysis</h3>
+                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">🔮 Cauldron Fill Analysis</h3>
                             <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
                                 <strong>Note:</strong> Fill Rate = continuous accumulation | Drain Rate = collection speed (reference) | Net Rate = Fill Rate (cauldrons fill continuously between pickups)
                             </p>
@@ -2275,6 +2263,8 @@
         let currentIndex = 0;
         let isPlaying = false;
         let playInterval = null;
+        let isPlaying3d = false;
+        let playInterval3d = null;
         let dateGroups = {};
         let cachedData = null; // Cache all historical data
         let isDataLoaded = false;
@@ -3190,6 +3180,302 @@
             }
         }
         
+        // Setup 3D timeline controls (identical to map timeline but with -3d suffixes)
+        let is3DTimelineSetup = false; // Guard against duplicate listener attachment
+        
+        function setup3DTimelineControls() {
+            const slider = document.getElementById('time-slider-3d');
+            const btnShow = document.getElementById('btn-show-3d');
+            const btnFirst = document.getElementById('btn-first-3d');
+            const btnPrev = document.getElementById('btn-prev-3d');
+            const btnPlay = document.getElementById('btn-play-3d');
+            const btnNext = document.getElementById('btn-next-3d');
+            const btnLast = document.getElementById('btn-last-3d');
+            const yearSelect = document.getElementById('year-select-3d');
+            const monthSelect = document.getElementById('month-select-3d');
+            const daySelect = document.getElementById('day-select-3d');
+            const timezoneSelect = document.getElementById('timezone-select-3d');
+            
+            // Populate year dropdown from cached data
+            populate3DYearDropdown();
+            
+            // Only attach event listeners once
+            if (!is3DTimelineSetup) {
+                is3DTimelineSetup = true;
+                
+                // Timezone change
+                timezoneSelect.addEventListener('change', function() {
+                    selectedTimezone = this.value;
+                    organizeDateGroups();
+                    populate3DYearDropdown(); // Re-populate dropdowns only
+                });
+                
+                // Date dropdown changes
+                yearSelect.addEventListener('change', function() {
+                    update3DMonthDropdown(this.value);
+                });
+                
+                monthSelect.addEventListener('change', function() {
+                    const year = yearSelect.value;
+                    update3DDayDropdown(year, this.value);
+                });
+                
+                // Show button
+                btnShow.addEventListener('click', show3DSelectedData);
+                
+                // Time slider change
+                slider.addEventListener('input', function() {
+                    update3DTimestampDisplay();
+                });
+                
+                slider.addEventListener('change', async function() {
+                    if (filteredTimestamps.length > 0) {
+                        const sliderIndex = parseInt(this.value);
+                        const actualIndex = filteredTimestamps[sliderIndex].index;
+                        await load3DLevelsAtIndex(actualIndex);
+                    }
+                });
+                
+                // First button
+                btnFirst.addEventListener('click', async function() {
+                    if (filteredTimestamps.length > 0) {
+                        slider.value = 0;
+                        const actualIndex = filteredTimestamps[0].index;
+                        await load3DLevelsAtIndex(actualIndex);
+                        update3DTimestampDisplay();
+                    }
+                });
+                
+                // Previous button
+                btnPrev.addEventListener('click', async function() {
+                    const sliderIndex = parseInt(slider.value);
+                    const newIndex = Math.max(0, sliderIndex - 1);
+                    slider.value = newIndex;
+                    if (filteredTimestamps.length > 0) {
+                        const actualIndex = filteredTimestamps[newIndex].index;
+                        await load3DLevelsAtIndex(actualIndex);
+                        update3DTimestampDisplay();
+                    }
+                });
+                
+                // Play/Pause button
+                btnPlay.addEventListener('click', function() {
+                    if (isPlaying3d) {
+                        stop3DPlayback();
+                    } else {
+                        start3DPlayback();
+                    }
+                });
+                
+                // Next button
+                btnNext.addEventListener('click', async function() {
+                    const sliderIndex = parseInt(slider.value);
+                    const newIndex = Math.min(filteredTimestamps.length - 1, sliderIndex + 1);
+                    slider.value = newIndex;
+                    if (filteredTimestamps.length > 0) {
+                        const actualIndex = filteredTimestamps[newIndex].index;
+                        await load3DLevelsAtIndex(actualIndex);
+                        update3DTimestampDisplay();
+                    }
+                });
+                
+                // Last button
+                btnLast.addEventListener('click', async function() {
+                    if (filteredTimestamps.length > 0) {
+                        slider.value = filteredTimestamps.length - 1;
+                        const actualIndex = filteredTimestamps[filteredTimestamps.length - 1].index;
+                        await load3DLevelsAtIndex(actualIndex);
+                        update3DTimestampDisplay();
+                    }
+                });
+            }
+        }
+        
+        // Helper to populate year dropdown for 3D timeline
+        function populate3DYearDropdown() {
+            const yearSelect = document.getElementById('year-select-3d');
+            if (cachedData && cachedData.length > 0) {
+                organizeDateGroups();
+                const years = Object.keys(dateGroups).sort((a, b) => b - a);
+                yearSelect.innerHTML = '<option value="">Select a year</option>';
+                years.forEach(year => {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    yearSelect.appendChild(option);
+                });
+                if (years.length > 0) {
+                    yearSelect.value = years[0];
+                    update3DMonthDropdown(years[0]);
+                }
+            }
+        }
+        
+        // Helper functions for 3D timeline
+        function update3DMonthDropdown(year) {
+            const monthSelect = document.getElementById('month-select-3d');
+            const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            monthSelect.innerHTML = '<option value="">Select a month</option>';
+            
+            if (!year || !dateGroups[year]) return;
+            
+            const months = Object.keys(dateGroups[year]).sort((a, b) => b - a);
+            months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = monthNames[parseInt(month)];
+                monthSelect.appendChild(option);
+            });
+            
+            if (months.length > 0) {
+                monthSelect.value = months[0];
+                update3DDayDropdown(year, months[0]);
+            }
+        }
+        
+        function update3DDayDropdown(year, month) {
+            const daySelect = document.getElementById('day-select-3d');
+            
+            daySelect.innerHTML = '<option value="">Select a day</option>';
+            
+            if (!year || !month || !dateGroups[year] || !dateGroups[year][month]) return;
+            
+            const days = Object.keys(dateGroups[year][month]).sort((a, b) => b - a);
+            days.forEach(day => {
+                const option = document.createElement('option');
+                option.value = day;
+                option.textContent = day;
+                daySelect.appendChild(option);
+            });
+            
+            if (days.length > 0) {
+                daySelect.value = days[0];
+            }
+        }
+        
+        function show3DSelectedData() {
+            const year = document.getElementById('year-select-3d').value;
+            const month = document.getElementById('month-select-3d').value;
+            const day = document.getElementById('day-select-3d').value;
+            
+            if (!year || !month || !day) {
+                alert('Please select a complete date (year, month, and day)');
+                return;
+            }
+            
+            filteredTimestamps = dateGroups[year][month][day] || [];
+            
+            if (filteredTimestamps.length === 0) {
+                alert('No data available for this date');
+                return;
+            }
+            
+            const slider = document.getElementById('time-slider-3d');
+            slider.max = filteredTimestamps.length - 1;
+            slider.value = 0;
+            slider.disabled = false;
+            
+            load3DLevelsAtIndex(filteredTimestamps[0].index);
+            update3DTimestampDisplay();
+        }
+        
+        function update3DTimestampDisplay() {
+            const slider = document.getElementById('time-slider-3d');
+            const sliderIndex = parseInt(slider.value);
+            
+            if (!filteredTimestamps || filteredTimestamps.length === 0) {
+                document.getElementById('current-timestamp-3d').textContent = 'Select a date...';
+                return;
+            }
+            
+            const record = filteredTimestamps[sliderIndex];
+            const date = new Date(record.timestamp);
+            
+            const selectedTimezone = document.getElementById('timezone-select-3d').value;
+            const options = { 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: selectedTimezone,
+                timeZoneName: 'short'
+            };
+            
+            document.getElementById('current-timestamp-3d').textContent = 
+                date.toLocaleString('en-US', options);
+        }
+        
+        async function load3DLevelsAtIndex(index) {
+            if (!cachedData || index < 0 || index >= cachedData.length) {
+                console.error('Invalid index for loading levels:', index);
+                return;
+            }
+            
+            const record = cachedData[index];
+            console.log('3D Timeline: Record structure at index', index, ':', record);
+            
+            // Update currentLevels with the data from this timestamp
+            currentLevels = {};
+            if (record.levels) {
+                Object.keys(record.levels).forEach(cauldronId => {
+                    currentLevels[cauldronId] = record.levels[cauldronId];
+                });
+            } else if (record.cauldron_levels) {
+                // Try alternate property name
+                Object.keys(record.cauldron_levels).forEach(cauldronId => {
+                    currentLevels[cauldronId] = record.cauldron_levels[cauldronId];
+                });
+            } else {
+                // Maybe the record IS the levels object
+                console.log('Checking if record is levels directly, keys:', Object.keys(record));
+            }
+            
+            console.log('3D Timeline: Loading levels at index', index, 'currentLevels:', currentLevels);
+            
+            // Update 3D scene with new levels
+            if (typeof update3DCauldrons === 'function') {
+                update3DCauldrons();
+            } else {
+                console.error('update3DCauldrons function not found');
+            }
+        }
+        
+        function start3DPlayback() {
+            if (filteredTimestamps.length === 0) return;
+            
+            isPlaying3d = true;
+            document.getElementById('btn-play-3d').textContent = '⏸️ Pause';
+            
+            const slider = document.getElementById('time-slider-3d');
+            
+            playInterval3d = setInterval(async () => {
+                const sliderIndex = parseInt(slider.value);
+                if (sliderIndex >= filteredTimestamps.length - 1) {
+                    stop3DPlayback();
+                    return;
+                }
+                
+                const newIndex = sliderIndex + 1;
+                slider.value = newIndex;
+                const actualIndex = filteredTimestamps[newIndex].index;
+                await load3DLevelsAtIndex(actualIndex);
+                update3DTimestampDisplay();
+            }, 100);
+        }
+        
+        function stop3DPlayback() {
+            isPlaying3d = false;
+            document.getElementById('btn-play-3d').textContent = '▶️ Play';
+            if (playInterval3d) {
+                clearInterval(playInterval3d);
+                playInterval3d = null;
+            }
+        }
+        
         // Load tickets from API
         async function loadTickets() {
             try {
@@ -3922,6 +4208,7 @@
                 document.getElementById('loading').style.display = 'none';
                 centerMap();
                 setupTimelineControls();
+                setup3DTimelineControls(); // Setup 3D timeline controls
                 
                 // Load the latest data if available
                 if (cachedData && cachedData.length > 0) {
@@ -5865,7 +6152,7 @@
             // Insert before the cauldron analysis table
             const cauldronAnalysisDiv = document.querySelector('#cauldron-analysis-tbody').parentElement.parentElement;
             const analysisSection = document.createElement('div');
-            analysisSection.className = 'chart-container';
+            analysisSection.style.cssText = 'background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;';
             analysisSection.innerHTML = concurrentHTML;
             cauldronAnalysisDiv.parentElement.insertBefore(analysisSection, cauldronAnalysisDiv);
         }
@@ -7586,7 +7873,13 @@
 
         // Update 3D cauldrons with current timeline data
         function update3DCauldrons() {
-            if (!window.cauldrons3d || cauldron3dObjects.length === 0) return;
+            if (!window.cauldrons3d || cauldron3dObjects.length === 0) {
+                console.log('3D Update: cauldrons3d or cauldron3dObjects not ready', 
+                    'cauldrons3d:', window.cauldrons3d?.length, 'objects:', cauldron3dObjects.length);
+                return;
+            }
+
+            console.log('3D Update: Updating', window.cauldrons3d.length, 'cauldrons with currentLevels:', currentLevels);
 
             window.cauldrons3d.forEach((cauldron, index) => {
                 if (index >= cauldron3dObjects.length) return;
@@ -7596,8 +7889,12 @@
                 const currentVolume = currentLevels[cauldron.id] || 0;
                 const fillPercent = (currentVolume / maxVolume) * 100;
 
+                console.log(`Cauldron ${cauldron.id}: ${currentVolume}L / ${maxVolume}L = ${fillPercent.toFixed(1)}%`);
+
                 // Update liquid height
                 const liquidHeight = (fillPercent / 100) * 5;
+                console.log(`  liquidHeight: ${liquidHeight}, userData.liquid exists: ${!!group.userData.liquid}`);
+                
                 const liquid = group.userData.liquid;
                 if (liquid) {
                     // Remove old liquid and glow
@@ -7615,9 +7912,11 @@
                     let color;
                     if (fillPercent > 90) color = 0xdc143c; // red
                     else if (fillPercent > 75) color = 0xff8c00; // orange
-                    else if (fillPercent > 60) color = 0xffd700; // yellow
+                    else if (fillPercent > 60) color = 0xffd700; // yellow  
                     else if (fillPercent > 40) color = 0xadff2f; // greenyellow
                     else color = 0x90ee90; // lightgreen
+
+                    console.log(`  New color based on ${fillPercent.toFixed(1)}%: ${color.toString(16)}`);
 
                     const liquidMaterial = new THREE.MeshPhongMaterial({
                         color: color,
@@ -7651,161 +7950,6 @@
             });
         }
 
-        // Timeline control functions for 3D visualization
-        let isPlaying3d = false;
-        let playInterval3d = null;
-
-        function setupTimeline3DControls() {
-            const slider = document.getElementById('time-slider-3d');
-            const btnFirst = document.getElementById('btn-first-3d');
-            const btnPrev = document.getElementById('btn-prev-3d');
-            const btnPlay = document.getElementById('btn-play-3d');
-            const btnNext = document.getElementById('btn-next-3d');
-            const btnLast = document.getElementById('btn-last-3d');
-
-            if (!slider) return;
-
-            // Time slider change
-            slider.addEventListener('input', function() {
-                update3DTimestampDisplay();
-            });
-
-            slider.addEventListener('change', async function() {
-                if (filteredTimestamps.length > 0) {
-                    const sliderIndex = parseInt(this.value);
-                    const actualIndex = filteredTimestamps[sliderIndex].index;
-                    await loadLevelsAtIndex(actualIndex);
-                    update3DCauldrons();
-                }
-            });
-
-            // First button
-            btnFirst.addEventListener('click', async function() {
-                if (filteredTimestamps.length > 0) {
-                    slider.value = 0;
-                    const actualIndex = filteredTimestamps[0].index;
-                    await loadLevelsAtIndex(actualIndex);
-                    update3DCauldrons();
-                    update3DTimestampDisplay();
-                }
-            });
-
-            // Previous button
-            btnPrev.addEventListener('click', async function() {
-                const sliderIndex = parseInt(slider.value);
-                const newIndex = Math.max(0, sliderIndex - 1);
-                slider.value = newIndex;
-                if (filteredTimestamps.length > 0) {
-                    const actualIndex = filteredTimestamps[newIndex].index;
-                    await loadLevelsAtIndex(actualIndex);
-                    update3DCauldrons();
-                    update3DTimestampDisplay();
-                }
-            });
-
-            // Play/Pause button
-            btnPlay.addEventListener('click', function() {
-                if (isPlaying3d) {
-                    stop3DPlayback();
-                } else {
-                    start3DPlayback();
-                }
-            });
-
-            // Next button
-            btnNext.addEventListener('click', async function() {
-                const sliderIndex = parseInt(slider.value);
-                const newIndex = Math.min(filteredTimestamps.length - 1, sliderIndex + 1);
-                slider.value = newIndex;
-                if (filteredTimestamps.length > 0) {
-                    const actualIndex = filteredTimestamps[newIndex].index;
-                    await loadLevelsAtIndex(actualIndex);
-                    update3DCauldrons();
-                    update3DTimestampDisplay();
-                }
-            });
-
-            // Last button
-            btnLast.addEventListener('click', async function() {
-                if (filteredTimestamps.length > 0) {
-                    slider.value = filteredTimestamps.length - 1;
-                    const actualIndex = filteredTimestamps[filteredTimestamps.length - 1].index;
-                    await loadLevelsAtIndex(actualIndex);
-                    update3DCauldrons();
-                    update3DTimestampDisplay();
-                }
-            });
-        }
-
-        function start3DPlayback() {
-            if (filteredTimestamps.length === 0) return;
-
-            isPlaying3d = true;
-            document.getElementById('btn-play-3d').textContent = '⏸️ Pause';
-
-            const slider = document.getElementById('time-slider-3d');
-
-            playInterval3d = setInterval(async () => {
-                const sliderIndex = parseInt(slider.value);
-                if (sliderIndex >= filteredTimestamps.length - 1) {
-                    stop3DPlayback();
-                    return;
-                }
-
-                const newIndex = sliderIndex + 1;
-                slider.value = newIndex;
-                const actualIndex = filteredTimestamps[newIndex].index;
-                await loadLevelsAtIndex(actualIndex);
-                update3DCauldrons();
-                update3DTimestampDisplay();
-            }, 100); // Play at 10 timestamps per second (100ms each)
-        }
-
-        function stop3DPlayback() {
-            isPlaying3d = false;
-            document.getElementById('btn-play-3d').textContent = '▶️ Play';
-            if (playInterval3d) {
-                clearInterval(playInterval3d);
-                playInterval3d = null;
-            }
-        }
-
-        function update3DTimestampDisplay() {
-            if (!filteredTimestamps || filteredTimestamps.length === 0) return;
-
-            const sliderIndex = parseInt(document.getElementById('time-slider-3d').value);
-            if (sliderIndex < 0 || sliderIndex >= filteredTimestamps.length) return;
-
-            const timestamp = filteredTimestamps[sliderIndex].timestamp;
-            const date = new Date(timestamp);
-
-            const options = {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                timeZone: selectedTimezone,
-                timeZoneName: 'short'
-            };
-
-            document.getElementById('current-timestamp-3d').textContent =
-                date.toLocaleString('en-US', options);
-        }
-
-        // Sync 3D timeline with map timeline when data is loaded
-        function sync3DTimeline() {
-            const slider3d = document.getElementById('time-slider-3d');
-            if (!slider3d || !filteredTimestamps) return;
-
-            slider3d.max = filteredTimestamps.length - 1;
-            slider3d.value = filteredTimestamps.length - 1;
-            slider3d.disabled = false;
-
-            update3DTimestampDisplay();
-        }
-
         // Initialize 3D when tab is opened
         let is3DInitialized = false;
 
@@ -7817,8 +7961,6 @@
             if (tabName === '3d' && !is3DInitialized) {
                 setTimeout(() => {
                     init3DVisualization();
-                    setupTimeline3DControls();
-                    sync3DTimeline();
                     is3DInitialized = true;
                 }, 100);
             }
