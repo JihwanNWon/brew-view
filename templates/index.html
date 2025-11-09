@@ -17,14 +17,14 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #120b2f; /* dark purple background */
             min-height: 100vh;
         }
         
         .header {
-            background: rgba(255, 255, 255, 0.95);
+            background: #2a173f; /* lighter purple than body #120b2f */
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.45);
         }
         
         .header h1 {
@@ -46,7 +46,7 @@
         
         .header p {
             text-align: center;
-            color: #666;
+            color: rgba(255,255,255,0.85);
             margin-top: 5px;
         }
         
@@ -78,7 +78,7 @@
         }
         
         .tab.active {
-            background: white;
+            background: #e6e6ea; /* slightly dimmer light gray */
             color: #667eea;
         }
         
@@ -107,7 +107,7 @@
         }
         
         .map-container {
-            background: white;
+            background: #e6e6ea; /* slightly dimmer light gray */
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
@@ -130,7 +130,7 @@
         }
         
         .info-panel {
-            background: white;
+            background: #e6e6ea; /* slightly dimmer light gray */
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
@@ -144,7 +144,7 @@
         }
         
         .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #764ba2; /* solid purple */
             color: white;
             padding: 15px;
             border-radius: 8px;
@@ -177,7 +177,7 @@
         
         /* Timeline Slider */
         .timeline-container {
-            background: white;
+            background: #e6e6ea; /* slightly dimmer light gray */
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
@@ -215,7 +215,7 @@
             border: 2px solid #667eea;
             border-radius: 5px;
             font-size: 14px;
-            background: white;
+            background: #e6e6ea; /* slightly dimmer light gray */
             cursor: pointer;
             max-width: 120px;
         }
@@ -260,7 +260,7 @@
         }
         
         .timeline-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #764ba2; /* solid purple */
             color: white;
             border: none;
             padding: 8px 16px;
@@ -279,7 +279,7 @@
         }
         
         .show-btn {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: #764ba2; /* solid purple */
             font-size: 16px;
             font-weight: bold;
             padding: 10px 30px;
@@ -293,7 +293,7 @@
         
         .time-slider-container {
             padding: 15px;
-            background: #f8f9fa;
+            background: #e6e6ea; /* slightly dimmer light gray */
             border-radius: 8px;
         }
         
@@ -313,7 +313,7 @@
         }
         
         .ticket-table th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #764ba2; /* solid purple */
             color: white;
             padding: 12px;
             text-align: left;
@@ -326,7 +326,7 @@
         }
         
         .ticket-table tr:hover {
-            background: #f8f9fa;
+            background: #e6e6ea;
         }
         
         .ticket-table tr.suspicious {
@@ -355,7 +355,7 @@
         }
         
         .pagination button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #764ba2; /* solid purple */
             color: white;
             border: none;
             padding: 8px 16px;
@@ -376,6 +376,37 @@
         .pagination span {
             color: #667eea;
             font-weight: 600;
+        }
+
+        /* Ticket stat cards (Ticket Logs summary boxes) */
+        .ticket-stat-card {
+            background: #5b2a86; /* dark purple that blends with #764ba2 */
+            color: #ffffff;
+            padding: 12px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .ticket-stat-card .ticket-stat-label {
+            color: rgba(255,255,255,0.9);
+            font-size: 12px;
+            margin-bottom: 2px;
+            font-weight: 600;
+        }
+        .ticket-stat-card .ticket-stat-value {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .ticket-stat-card .ticket-stat-sub {
+            color: rgba(255,255,255,0.85);
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        .ticket-stat-muted {
+            opacity: 0.8;
         }
         
         /* Ticket Filters */
@@ -403,7 +434,7 @@
             padding: 8px;
             border: 2px solid #667eea;
             border-radius: 5px;
-            background: white;
+            background: #e6e6ea; /* slightly dimmer light gray */
             cursor: pointer;
             font-size: 14px;
             display: flex;
@@ -421,7 +452,7 @@
             top: 105%;
             left: 0;
             z-index: 50;
-            background: white;
+            background: #e6e6ea; /* slightly dimmer light gray */
             border: 2px solid #667eea;
             border-radius: 6px;
             max-height: 260px;
@@ -456,7 +487,7 @@
             border: 2px solid #667eea;
             border-radius: 5px;
             font-size: 14px;
-            background: white;
+            background: #e6e6ea; /* slightly dimmer light gray */
             cursor: pointer;
         }
         
@@ -466,7 +497,7 @@
             border: 2px solid #667eea;
             border-radius: 5px;
             padding: 8px;
-            background: white;
+            background: #e6e6ea; /* slightly dimmer light gray */
         }
         
         .checkbox-item {
@@ -491,7 +522,7 @@
         }
         
         .filter-group button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #764ba2; /* solid purple */
             color: white;
             border: none;
             padding: 8px 16px;
@@ -636,7 +667,7 @@
                     <div class="time-label">Time of Day:</div>
                     <div class="timeline-info">
                         <div>
-                            <span class="timestamp-display" id="current-timestamp">Select a date</span>
+                            <span class="timestamp-display" id="current-timestamp">Select a date...</span>
                         </div>
                     </div>
                     <input type="range" class="timeline-slider" id="time-slider" 
@@ -2145,22 +2176,22 @@
             
             // Build stats HTML
             const statsHTML = `
-                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 4px;">
-                    <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">✅ Match Tickets</div>
-                    <div style="color: #66ff66; font-size: 28px; font-weight: bold;">${validMatches}/${total}</div>
+                <div class="ticket-stat-card">
+                    <div class="ticket-stat-label">✅ Match Tickets</div>
+                    <div class="ticket-stat-value">${validMatches}/${total}</div>
                 </div>
-                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 4px;">
-                    <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">⚠️ Suspicious Tickets</div>
-                    <div style="color: ${suspiciousColor}; font-size: 28px; font-weight: bold;">${suspicious}/${total}</div>
-                    <div style="color: #aaa; font-size: 11px; margin-top: 3px;">Over: ${statusCounts['over-reported']} | Under: ${statusCounts['under-reported']} | No-Drain: ${statusCounts['no-drain-match']}</div>
+                <div class="ticket-stat-card">
+                    <div class="ticket-stat-label">⚠️ Suspicious Tickets</div>
+                    <div class="ticket-stat-value" style="color: ${suspiciousColor};">${suspicious}/${total}</div>
+                    <div class="ticket-stat-sub">Over: ${statusCounts['over-reported']} | Under: ${statusCounts['under-reported']} | No-Drain: ${statusCounts['no-drain-match']}</div>
                 </div>
-                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 4px; opacity: 0.5;">
-                    <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">📈 [Future Metric]</div>
-                    <div style="color: #888; font-size: 28px; font-weight: bold;">-</div>
+                <div class="ticket-stat-card ticket-stat-muted">
+                    <div class="ticket-stat-label">📈 [Future Metric]</div>
+                    <div class="ticket-stat-value">-</div>
                 </div>
-                <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 4px; opacity: 0.5;">
-                    <div style="color: #aaa; font-size: 12px; margin-bottom: 5px;">📉 [Future Metric]</div>
-                    <div style="color: #888; font-size: 28px; font-weight: bold;">-</div>
+                <div class="ticket-stat-card ticket-stat-muted">
+                    <div class="ticket-stat-label">📉 [Future Metric]</div>
+                    <div class="ticket-stat-value">-</div>
                 </div>
             `;
             
