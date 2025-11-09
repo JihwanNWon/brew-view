@@ -13,7 +13,6 @@ A web-based dashboard for monitoring potion flow and cauldron management. Brew V
   - Navigation
   - Timeline Controls
   - Filtering Data
-  - Light Mode Toggle
 - Features
 - Troubleshooting
 - Support and Feedback
@@ -117,10 +116,6 @@ Brew View is a Flask-based dashboard for real-time and historical monitoring of 
 - Use dropdown filters in Ticket Logs and Trends to select cauldrons, couriers, and date ranges  
 - Multiple selections are supported  
 - Filters apply either automatically or when you click **Apply**, depending on the UI context
-
-#### Light Mode Toggle
-- Click the theme toggle button in the top-right corner to switch between **Dark** and **Light** themes  
-- Theme selection persists across sessions
 
 ---
 
