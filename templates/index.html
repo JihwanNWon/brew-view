@@ -28,6 +28,43 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #120b2f; /* dark purple background */
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* Floating potion decorations */
+        .floating-potions {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        
+        .floating-potion {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(var(--rotation));
+            }
+            50% {
+                transform: translateY(-30px) rotate(calc(var(--rotation) + 5deg));
+            }
+        }
+        
+        /* Make sure main content is above floating potions */
+        .header, .tabs, .content {
+            position: relative;
+            z-index: 1;
         }
         
         h2 {
@@ -722,6 +759,9 @@
     </style>
 </head>
 <body>
+    <!-- Floating potion decorations -->
+    <div class="floating-potions" id="floating-potions"></div>
+    
     <div class="header">
         <div class="brand">
             <img class="witch-head" src="{{ url_for('static', filename='images/markers/witchHead.png') }}" alt="Witch" />
@@ -736,6 +776,8 @@
     <button class="tab active" onclick="switchTab('map', this)"><img src="{{ url_for('static', filename='images/markers/pin.png') }}" alt="Map" class="inline-icon"> Map</button>
     <button class="tab" onclick="switchTab('tickets', this)"><img src="{{ url_for('static', filename='images/markers/ticket.png') }}" alt="Tickets" class="inline-icon-ticket"> Ticket Logs</button>
     <button class="tab" onclick="switchTab('trends', this)">📈 Cauldron Trends</button>
+    <button class="tab" onclick="switchTab('analytics', this)">📊 Analytics Dashboard</button>
+    <button class="tab" onclick="switchTab('optimization', this)">🗺️ Route Optimization</button>
     </div>
     
     <!-- Map Tab Content -->
@@ -1022,10 +1064,223 @@
         </div>
     </div>
     
+    <!-- Analytics Dashboard Tab Content -->
+    <div id="analytics-tab" class="tab-content">
+        <div class="container">
+            <div class="info-panel">
+                <h2>📊 Analytics Dashboard</h2>
+                <div id="analytics-loading" class="loading">Loading analytics...</div>
+                <div id="analytics-container" style="display: none;">
+                    
+                    <!-- Overview Stats -->
+                    <div style="margin-bottom: 30px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">📈 Overview Statistics</h3>
+                        <div class="stats" id="analytics-overview">
+                            <!-- Overview stats will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Courier Performance -->
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">🚚 Courier Performance</h3>
+                        <div style="margin-bottom: 20px;">
+                            <canvas id="courier-performance-chart" style="max-height: 400px;"></canvas>
+                        </div>
+                        <table class="ticket-table" id="courier-performance-table">
+                            <thead>
+                                <tr>
+                                    <th>Courier</th>
+                                    <th>Total Deliveries</th>
+                                    <th>Total Collected (L)</th>
+                                    <th>Avg per Delivery (L)</th>
+                                    <th>Suspicious Rate</th>
+                                    <th>Performance Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody id="courier-tbody">
+                                <!-- Courier stats will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Cauldron Efficiency -->
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">⚗️ Cauldron Efficiency</h3>
+                        <div style="margin-bottom: 20px;">
+                            <canvas id="cauldron-efficiency-chart" style="max-height: 400px;"></canvas>
+                        </div>
+                        <table class="ticket-table" id="cauldron-efficiency-table">
+                            <thead>
+                                <tr>
+                                    <th>Cauldron</th>
+                                    <th>Total Collections</th>
+                                    <th>Total Output (L)</th>
+                                    <th>Avg Fill Rate (L/day)</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cauldron-efficiency-tbody">
+                                <!-- Cauldron stats will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Route Efficiency -->
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">🛣️ Network Efficiency</h3>
+                        <div class="stats" id="network-stats">
+                            <!-- Network stats will be populated here -->
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Route Optimization Tab Content -->
+    <div id="optimization-tab" class="tab-content">
+        <div class="container">
+            <div class="info-panel">
+                <h2>🗺️ Route Optimization & Scheduling</h2>
+                <div id="optimization-loading" class="loading">Loading optimization data...</div>
+                <div id="optimization-container" style="display: none;">
+                    
+                    <!-- Optimization Controls -->
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">⚙️ Optimization Settings</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                            <div>
+                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Maximum Fill Level (%)</label>
+                                <input type="number" id="safety-margin" value="90" min="50" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 5px;">
+                                <small style="color: #666;">Collect before cauldrons reach this level</small>
+                            </div>
+                            <div>
+                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Forecast Period (days)</label>
+                                <input type="number" id="forecast-days" value="7" min="1" max="30" step="1" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 5px;">
+                                <small style="color: #666;">Long-term prediction window (default: 1 week)</small>
+                            </div>
+                        </div>
+                        <button onclick="calculateOptimization()" style="background: #667eea; color: white; border: none; padding: 12px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
+                            🔄 Calculate Optimal Routes
+                        </button>
+                    </div>
+                    
+                    <!-- Optimization Results -->
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">📊 Optimization Results</h3>
+                        <div class="stats" id="optimization-stats">
+                            <!-- Stats will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Route Map Visualization -->
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">🗺️ Optimized Route Visualization</h3>
+                        <div id="optimization-map" style="height: 500px; border-radius: 10px;"></div>
+                    </div>
+                    
+                    <!-- Witch Schedule -->
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">🧙 Witch Assignments (Continuous Operation)</h3>
+                        <table class="ticket-table" id="witch-schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>Witch ID</th>
+                                    <th>Assigned Cauldrons</th>
+                                    <th>Total Distance (km)</th>
+                                    <th>Cycle Time (min)</th>
+                                    <th>Collections per Cycle</th>
+                                    <th>Route</th>
+                                </tr>
+                            </thead>
+                            <tbody id="witch-schedule-tbody">
+                                <!-- Schedule will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Cauldron Predictions -->
+                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">🔮 Cauldron Fill Level Predictions (Long-term Forecast)</h3>
+                        <table class="ticket-table" id="cauldron-predictions-table">
+                            <thead>
+                                <tr>
+                                    <th>Cauldron</th>
+                                    <th>Current Level (L)</th>
+                                    <th>Fill Rate (L/hr)</th>
+                                    <th>Drain Rate (L/hr)</th>
+                                    <th>Predicted Level (L)</th>
+                                    <th>Collection Frequency</th>
+                                    <th>Next Collection Due</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cauldron-predictions-tbody">
+                                <!-- Predictions will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
+        // Create floating potion decorations
+        function createFloatingPotions() {
+            const container = document.getElementById('floating-potions');
+            const potionTypes = ['potBabyBlue', 'potCream', 'potGreen', 'potMagenta', 'potNavyBlue', 'potPurple', 'potYellow'];
+            const numPotions = 8; // Not too many
+            
+            // Split evenly between left and right
+            const potionsPerSide = numPotions / 2;
+            
+            for (let i = 0; i < numPotions; i++) {
+                const potion = document.createElement('img');
+                const potionType = potionTypes[Math.floor(Math.random() * potionTypes.length)];
+                potion.src = `/static/images/markers/${potionType}.png`;
+                potion.className = 'floating-potion';
+                
+                // Alternate between left and right side
+                const isLeftSide = i < potionsPerSide;
+                if (isLeftSide) {
+                    // Left margin: 0-15% from left
+                    potion.style.left = Math.random() * 15 + '%';
+                } else {
+                    // Right margin: 85-100% from left
+                    potion.style.left = (85 + Math.random() * 15) + '%';
+                }
+                
+                // Evenly distribute vertically with some randomness
+                const basePosition = (i % potionsPerSide) * (100 / potionsPerSide);
+                const randomOffset = (Math.random() - 0.5) * (100 / potionsPerSide) * 0.5; // 50% variation
+                potion.style.top = Math.max(0, Math.min(100, basePosition + randomOffset)) + '%';
+                
+                // Random tilt between -45 and 45 degrees
+                const rotation = (Math.random() * 90 - 45);
+                potion.style.setProperty('--rotation', rotation + 'deg');
+                
+                // Random animation delay and duration for variety
+                potion.style.animationDelay = Math.random() * 10 + 's';
+                potion.style.animationDuration = (15 + Math.random() * 10) + 's';
+                
+                // Random size variation (80-120px, larger than before)
+                const size = 80 + Math.random() * 40;
+                potion.style.width = size + 'px';
+                potion.style.height = size + 'px';
+                
+                container.appendChild(potion);
+            }
+        }
+        
+        // Create potions on page load
+        createFloatingPotions();
+        
         // Tab switching function
         function switchTab(tabName, element) {
             // Hide all tab contents
@@ -1054,6 +1309,16 @@
             // If switching to trends tab, initialize it
             if (tabName === 'trends') {
                 setTimeout(() => initTrendsTab(), 100);
+            }
+            
+            // If switching to analytics tab, initialize it
+            if (tabName === 'analytics') {
+                setTimeout(() => initAnalyticsTab(), 100);
+            }
+            
+            // If switching to optimization tab, initialize it
+            if (tabName === 'optimization') {
+                setTimeout(() => initOptimizationTab(), 100);
             }
         }
 
@@ -3108,6 +3373,1394 @@
                     }
                 }
             });
+        }
+        
+        // ========================================
+        // ANALYTICS DASHBOARD FUNCTIONS
+        // ========================================
+        
+        let analyticsInitialized = false;
+        let courierChart = null;
+        let cauldronChart = null;
+        
+        async function initAnalyticsTab() {
+            if (analyticsInitialized) {
+                console.log('Analytics already initialized');
+                return;
+            }
+            
+            console.log('Initializing Analytics Dashboard...');
+            document.getElementById('analytics-loading').style.display = 'block';
+            document.getElementById('analytics-container').style.display = 'none';
+            
+            try {
+                // Wait for tickets to be loaded
+                if (allTickets.length === 0) {
+                    await loadTickets();
+                }
+                
+                // Calculate analytics
+                calculateAnalytics();
+                
+                document.getElementById('analytics-loading').style.display = 'none';
+                document.getElementById('analytics-container').style.display = 'block';
+                analyticsInitialized = true;
+            } catch (error) {
+                console.error('Error initializing analytics:', error);
+                document.getElementById('analytics-loading').textContent = 'Error loading analytics: ' + error.message;
+            }
+        }
+        
+        function calculateAnalytics() {
+            // Overview Statistics
+            const totalTickets = allTickets.length;
+            const suspiciousTickets = allTickets.filter(t => {
+                // Count tickets that are suspicious or high-risk
+                return t.confidence_level === 'suspicious' || 
+                       t.confidence_level === 'high-risk' ||
+                       t.discrepancy_status === 'over-reported' || 
+                       t.discrepancy_status === 'under-reported' ||
+                       t.discrepancy_status === 'no-drain-match';
+            }).length;
+            const totalVolume = allTickets.reduce((sum, t) => sum + (t.amount_collected || 0), 0);
+            const avgPerDelivery = totalTickets > 0 ? totalVolume / totalTickets : 0;
+            const suspiciousRate = totalTickets > 0 ? (suspiciousTickets / totalTickets * 100) : 0;
+            
+            // Unique couriers and cauldrons
+            const uniqueCouriers = new Set(allTickets.map(t => t.courier_id)).size;
+            const uniqueCauldrons = new Set(allTickets.map(t => t.cauldron_id)).size;
+            
+            document.getElementById('analytics-overview').innerHTML = `
+                <div class="stat-card">
+                    <h3>${totalTickets.toLocaleString()}</h3>
+                    <p>Total Deliveries</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${totalVolume.toFixed(0).toLocaleString()}L</h3>
+                    <p>Total Volume Collected</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${avgPerDelivery.toFixed(1)}L</h3>
+                    <p>Avg per Delivery</p>
+                </div>
+                <div class="stat-card" style="background: ${suspiciousRate > 10 ? '#d9681a' : '#764ba2'}">
+                    <h3>${suspiciousRate.toFixed(1)}%</h3>
+                    <p>Suspicious Rate</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${uniqueCouriers}</h3>
+                    <p>Active Couriers</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${uniqueCauldrons}</h3>
+                    <p>Active Cauldrons</p>
+                </div>
+            `;
+            
+            // Courier Performance Analysis
+            analyzeCourierPerformance();
+            
+            // Cauldron Efficiency Analysis
+            analyzeCauldronEfficiency();
+            
+            // Network Efficiency
+            analyzeNetworkEfficiency(uniqueCauldrons);
+        }
+        
+        function analyzeCourierPerformance() {
+            const courierStats = {};
+            
+            allTickets.forEach(ticket => {
+                const courier = ticket.courier_id;
+                if (!courier) return;
+                
+                if (!courierStats[courier]) {
+                    courierStats[courier] = {
+                        deliveries: 0,
+                        totalCollected: 0,
+                        suspicious: 0
+                    };
+                }
+                
+                courierStats[courier].deliveries++;
+                courierStats[courier].totalCollected += ticket.amount_collected || 0;
+                
+                if (ticket.confidence_level === 'suspicious' || 
+                    ticket.confidence_level === 'high-risk' ||
+                    ticket.discrepancy_status === 'over-reported' || 
+                    ticket.discrepancy_status === 'under-reported' ||
+                    ticket.discrepancy_status === 'no-drain-match') {
+                    courierStats[courier].suspicious++;
+                }
+            });
+            
+            // Convert to array and calculate metrics
+            const courierData = Object.entries(courierStats).map(([courier, stats]) => {
+                const avgPerDelivery = stats.deliveries > 0 ? stats.totalCollected / stats.deliveries : 0;
+                const suspiciousRate = stats.deliveries > 0 ? (stats.suspicious / stats.deliveries * 100) : 0;
+                const performanceRating = calculatePerformanceRating(stats.deliveries, avgPerDelivery, suspiciousRate);
+                
+                return {
+                    courier,
+                    deliveries: stats.deliveries,
+                    totalCollected: stats.totalCollected,
+                    avgPerDelivery,
+                    suspiciousRate,
+                    performanceRating
+                };
+            }).sort((a, b) => b.performanceRating - a.performanceRating); // Sort by performance rating
+            
+            // Populate table
+            const tbody = document.getElementById('courier-tbody');
+            tbody.innerHTML = courierData.map(data => {
+                const ratingColor = data.performanceRating >= 80 ? '#28a745' : 
+                                   data.performanceRating >= 60 ? '#ffc107' : '#dc3545';
+                return `
+                    <tr>
+                        <td><strong>${data.courier}</strong></td>
+                        <td>${data.deliveries}</td>
+                        <td>${data.totalCollected.toFixed(1)}L</td>
+                        <td>${data.avgPerDelivery.toFixed(1)}L</td>
+                        <td>${data.suspiciousRate.toFixed(1)}%</td>
+                        <td style="color: ${ratingColor}; font-weight: bold;">${data.performanceRating.toFixed(0)}/100</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Create chart
+            const topCouriers = courierData.slice(0, 5);
+            const ctx = document.getElementById('courier-performance-chart').getContext('2d');
+            
+            if (courierChart) courierChart.destroy();
+            
+            courierChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topCouriers.map(d => d.courier),
+                    datasets: [{
+                        label: 'Performance Rating',
+                        data: topCouriers.map(d => d.performanceRating),
+                        backgroundColor: '#667eea',
+                        borderColor: '#4c51bf',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Top 5 Couriers by Performance Rating',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: { display: true, text: 'Performance Rating' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function calculatePerformanceRating(deliveries, avgPerDelivery, suspiciousRate) {
+            // Rating based on: deliveries (40%), avg amount (30%), low suspicious rate (30%)
+            const deliveryScore = Math.min(deliveries / 50, 1) * 40;
+            const avgScore = Math.min(avgPerDelivery / 100, 1) * 30;
+            const reliabilityScore = Math.max(0, (1 - suspiciousRate / 100)) * 30;
+            
+            return deliveryScore + avgScore + reliabilityScore;
+        }
+        
+        function analyzeCauldronEfficiency() {
+            const cauldronStats = {};
+            
+            allTickets.forEach(ticket => {
+                const cauldron = ticket.cauldron_id;
+                if (!cauldron) return;
+                
+                if (!cauldronStats[cauldron]) {
+                    cauldronStats[cauldron] = {
+                        collections: 0,
+                        totalOutput: 0,
+                        timestamps: []
+                    };
+                }
+                
+                cauldronStats[cauldron].collections++;
+                cauldronStats[cauldron].totalOutput += ticket.amount_collected || 0;
+                
+                if (ticket.timestamp) {
+                    const timestamp = new Date(ticket.timestamp);
+                    if (!isNaN(timestamp.getTime())) {
+                        cauldronStats[cauldron].timestamps.push(timestamp);
+                    }
+                }
+            });
+            
+            // Calculate metrics
+            const cauldronData = Object.entries(cauldronStats).map(([cauldronId, stats]) => {
+                const cauldronInfo = cauldrons.find(c => c.id === cauldronId);
+                const maxVolume = cauldronInfo?.max_volume || 1000;
+                
+                let daysDiff = 1;
+                if (stats.timestamps.length > 1) {
+                    const timestamps = stats.timestamps.sort((a, b) => a - b);
+                    const firstDate = timestamps[0];
+                    const lastDate = timestamps[timestamps.length - 1];
+                    daysDiff = Math.max(1, (lastDate - firstDate) / (1000 * 60 * 60 * 24));
+                }
+                
+                const avgFillRate = stats.totalOutput / daysDiff;
+                
+                // Status based on fill rate
+                const status = avgFillRate > 80 ? 'Excellent' : avgFillRate > 50 ? 'Good' : 'Low';
+                
+                return {
+                    cauldron: cauldronId,
+                    collections: stats.collections,
+                    totalOutput: stats.totalOutput,
+                    avgFillRate,
+                    status
+                };
+            }).sort((a, b) => b.totalOutput - a.totalOutput);
+            
+            // Populate table
+            const tbody = document.getElementById('cauldron-efficiency-tbody');
+            tbody.innerHTML = cauldronData.map(data => {
+                const statusColor = data.status === 'Excellent' ? '#28a745' : 
+                                   data.status === 'Good' ? '#ffc107' : '#dc3545';
+                return `
+                    <tr>
+                        <td><strong>${data.cauldron}</strong></td>
+                        <td>${data.collections}</td>
+                        <td>${data.totalOutput.toFixed(1)}L</td>
+                        <td>${data.avgFillRate.toFixed(1)}L</td>
+                        <td style="color: ${statusColor}; font-weight: bold;">${data.status}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Create chart
+            const topCauldrons = cauldronData.slice(0, 10);
+            const ctx = document.getElementById('cauldron-efficiency-chart').getContext('2d');
+            
+            if (cauldronChart) cauldronChart.destroy();
+            
+            cauldronChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topCauldrons.map(d => d.cauldron),
+                    datasets: [{
+                        label: 'Total Output (L)',
+                        data: topCauldrons.map(d => d.totalOutput),
+                        backgroundColor: '#764ba2',
+                        borderColor: '#5a3880',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Top 10 Cauldrons by Total Output',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Volume (L)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function analyzeNetworkEfficiency(uniqueCauldrons) {
+            const routeStats = {};
+            
+            allTickets.forEach(ticket => {
+                if (!ticket.cauldron_id) return;
+                
+                const route = `${ticket.cauldron_id} → Market`;
+                if (!routeStats[route]) {
+                    routeStats[route] = {
+                        trips: 0,
+                        totalVolume: 0
+                    };
+                }
+                routeStats[route].trips++;
+                routeStats[route].totalVolume += ticket.amount_collected || 0;
+            });
+            
+            const totalRoutes = Object.keys(routeStats).length;
+            const totalTrips = Object.values(routeStats).reduce((sum, s) => sum + s.trips, 0);
+            const avgTripsPerRoute = totalRoutes > 0 ? totalTrips / totalRoutes : 0;
+            const busiestRoute = Object.entries(routeStats).sort((a, b) => b[1].trips - a[1].trips)[0];
+            
+            const networkCoverage = cauldrons.length > 0 ? (uniqueCauldrons / cauldrons.length * 100) : 0;
+            
+            document.getElementById('network-stats').innerHTML = `
+                <div class="stat-card">
+                    <h3>${totalRoutes}</h3>
+                    <p>Active Routes</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${totalTrips.toLocaleString()}</h3>
+                    <p>Total Trips</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${avgTripsPerRoute.toFixed(1)}</h3>
+                    <p>Avg Trips per Route</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${busiestRoute ? busiestRoute[0].split(' → ')[0] : 'N/A'}</h3>
+                    <p>Busiest Route (${busiestRoute ? busiestRoute[1].trips : 0} trips)</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${networkCoverage.toFixed(0)}%</h3>
+                    <p>Network Coverage</p>
+                </div>
+            `;
+        }
+        
+        // ========================================
+        // ROUTE OPTIMIZATION TAB FUNCTIONS
+        // ========================================
+        
+        let optimizationInitialized = false;
+        let optimizationMap = null;
+        let routePolylines = [];
+        
+        async function initOptimizationTab() {
+            if (optimizationInitialized) {
+                console.log('Optimization already initialized');
+                return;
+            }
+            
+            console.log('Initializing Route Optimization...');
+            document.getElementById('optimization-loading').style.display = 'block';
+            document.getElementById('optimization-container').style.display = 'none';
+            
+            try {
+                // Initialize the map
+                if (!optimizationMap) {
+                    optimizationMap = L.map('optimization-map').setView([33.2148, -97.13], 13);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '© OpenStreetMap contributors',
+                        maxZoom: 19
+                    }).addTo(optimizationMap);
+                }
+                
+                document.getElementById('optimization-loading').style.display = 'none';
+                document.getElementById('optimization-container').style.display = 'block';
+                
+                // Run initial optimization
+                calculateOptimization();
+                
+                optimizationInitialized = true;
+                
+                // Fix map rendering
+                setTimeout(() => {
+                    if (optimizationMap) optimizationMap.invalidateSize();
+                }, 200);
+            } catch (error) {
+                console.error('Error initializing optimization:', error);
+                document.getElementById('optimization-loading').textContent = 'Error loading optimization: ' + error.message;
+            }
+        }
+        
+        function calculateOptimization() {
+            console.log('Calculating optimal routes and schedules for continuous operation...');
+            
+            const safetyMargin = parseFloat(document.getElementById('safety-margin').value) / 100;
+            const forecastDays = parseFloat(document.getElementById('forecast-days').value);
+            const forecastHours = forecastDays * 24; // Convert days to hours
+            
+            console.log(`Settings: Max Fill Level = ${(safetyMargin * 100).toFixed(0)}%, Forecast = ${forecastDays} days`);
+            
+            // Use simulation-based approach: create optimal routes, simulate, add witches as needed
+            const result = calculateOptimalWitchesIteratively(forecastHours, safetyMargin);
+            const routes = result.routes;
+            const minWitches = result.totalWitches;
+            const predictions = result.predictions;
+            
+            console.log(`Final: ${minWitches} witches required for continuous 24/7 operation`);
+            
+            // Display results
+            displayOptimizationStats(minWitches, routes, predictions, forecastHours);
+            displayWitchSchedule(routes);
+            displayCauldronPredictions(predictions);
+            visualizeRoutesOnMap(routes);
+        }
+        
+        // Simulation-based approach: create optimal routes, simulate collection, add witches as needed
+        function calculateOptimalWitchesIteratively(forecastHours, safetyMargin) {
+            const WITCH_CAPACITY = 200; // Liters - max a witch can carry at once
+            const MAX_ITERATIONS = 20; // Safety limit
+            
+            console.log('Starting iterative witch calculation...');
+            
+            // Get predictions to understand cauldron urgency
+            const predictions = predictCauldronLevels(forecastHours, safetyMargin);
+            
+            let currentWitches = 1; // Start with 1 witch
+            let routes = [];
+            let overflowDetected = true;
+            let iteration = 0;
+            
+            while (overflowDetected && iteration < MAX_ITERATIONS) {
+                iteration++;
+                
+                // Create optimal routes for current number of witches
+                routes = createOptimalRoutes(predictions, currentWitches);
+                
+                console.log(`\nIteration ${iteration}: Testing with ${currentWitches} witch(es)`);
+                routes.forEach((r, i) => {
+                    console.log(`  Route ${i + 1}: ${r.collections} cauldrons, ${r.time.toFixed(1)} min cycle, ${r.collectableVolume.toFixed(0)}L to collect`);
+                });
+                
+                // Simulate collection over forecast period
+                overflowDetected = simulateCollection(routes, forecastHours, safetyMargin, WITCH_CAPACITY);
+                
+                if (overflowDetected) {
+                    console.log(`  ❌ Overflow detected - adding another witch`);
+                    currentWitches++;
+                } else {
+                    console.log(`  ✅ No overflow - ${currentWitches} witch(es) sufficient`);
+                }
+            }
+            
+            if (iteration >= MAX_ITERATIONS) {
+                console.warn(`Warning: Reached max iterations (${MAX_ITERATIONS}). Using ${currentWitches} witches.`);
+            }
+            
+            return {
+                totalWitches: currentWitches,
+                routes: routes,
+                predictions: predictions
+            };
+        }
+        
+        // Create optimal routes distributed across N witches
+        function createOptimalRoutes(predictions, numWitches) {
+            // Sort cauldrons by urgency (most urgent first)
+            const sortedCauldrons = [...predictions].sort((a, b) => 
+                a.requiredCollectionFrequency - b.requiredCollectionFrequency
+            );
+            
+            // Distribute cauldrons evenly across witches using round-robin
+            const routes = Array(numWitches).fill(null).map(() => ({
+                collections: 0,
+                sequence: [],
+                time: 0,
+                distance: 0,
+                collectableVolume: 0
+            }));
+            
+            // Assign each cauldron to the witch with the shortest current route
+            sortedCauldrons.forEach(cauldron => {
+                // Find route with minimum time
+                let minRoute = 0;
+                let minTime = routes[0].time;
+                for (let i = 1; i < routes.length; i++) {
+                    if (routes[i].time < minTime) {
+                        minTime = routes[i].time;
+                        minRoute = i;
+                    }
+                }
+                
+                const route = routes[minRoute];
+                const cauldronObj = cauldrons.find(c => c.id === cauldron.cauldron);
+                const cauldronPos = { lat: cauldronObj.latitude, lng: cauldronObj.longitude };
+                
+                // Add to route sequence
+                if (route.sequence.length === 0) {
+                    // First cauldron - add travel from market
+                    const travelTime = calculateTravelTime(marketPos, cauldronPos, 'market', cauldronObj.id);
+                    route.time += travelTime + COLLECTION_TIME;
+                    route.distance += getDistance(marketPos, cauldronPos);
+                } else {
+                    // Add travel from last cauldron
+                    const lastCauldronId = route.sequence[route.sequence.length - 1];
+                    const lastCauldron = cauldrons.find(c => c.id === lastCauldronId);
+                    const lastPos = { lat: lastCauldron.latitude, lng: lastCauldron.longitude };
+                    
+                    const travelTime = calculateTravelTime(lastPos, cauldronPos, lastCauldronId, cauldronObj.id);
+                    route.time += travelTime + COLLECTION_TIME;
+                    route.distance += getDistance(lastPos, cauldronPos);
+                }
+                
+                route.sequence.push(cauldron.cauldron);
+                route.collections++;
+                route.collectableVolume += cauldron.currentLevel; // Approximate collectable volume
+            });
+            
+            // Add return to market for all routes
+            routes.forEach(route => {
+                if (route.sequence.length > 0) {
+                    const lastCauldronId = route.sequence[route.sequence.length - 1];
+                    const lastCauldron = cauldrons.find(c => c.id === lastCauldronId);
+                    const lastPos = { lat: lastCauldron.latitude, lng: lastCauldron.longitude };
+                    
+                    const returnTime = calculateTravelTime(lastPos, marketPos, lastCauldronId, 'market');
+                    route.time += returnTime + DROPOFF_TIME;
+                    route.distance += getDistance(lastPos, marketPos);
+                    
+                    // Store cycle time in hours
+                    route.cycleTime = route.time / 60;
+                    route.witchesNeeded = 1; // Each route gets 1 witch in this approach
+                }
+            });
+            
+            return routes.filter(r => r.collections > 0);
+        }
+        
+        // Simulate collection process over forecast period
+        function simulateCollection(routes, forecastHours, safetyMargin, witchCapacity) {
+            const timeStep = 0.1; // Simulate in 6-minute increments (0.1 hour)
+            const numSteps = Math.floor(forecastHours / timeStep);
+            
+            // Initialize cauldron levels
+            const cauldronLevels = {};
+            cauldrons.forEach(cauldron => {
+                cauldronLevels[cauldron.id] = currentLevels[cauldron.id] || 0;
+            });
+            
+            // Track witch positions and next collection times
+            const witchStates = routes.map((route, idx) => ({
+                routeIndex: idx,
+                nextCollectionTime: 0, // Start immediately
+                currentCauldronIndex: 0,
+                carrying: 0 // Amount currently carrying
+            }));
+            
+            let overflowDetected = false;
+            
+            // Simulate over time
+            for (let step = 0; step < numSteps && !overflowDetected; step++) {
+                const currentTime = step * timeStep;
+                
+                // Check each witch
+                witchStates.forEach(witch => {
+                    const route = routes[witch.routeIndex];
+                    
+                    // Check if witch should collect now
+                    if (currentTime >= witch.nextCollectionTime && route.sequence.length > 0) {
+                        const cauldronId = route.sequence[witch.currentCauldronIndex];
+                        const cauldron = cauldrons.find(c => c.id === cauldronId);
+                        const maxVolume = cauldron.max_volume || 1000;
+                        const currentLevel = cauldronLevels[cauldronId];
+                        
+                        // Collect up to witch capacity or current level
+                        const amountToCollect = Math.min(currentLevel, witchCapacity);
+                        cauldronLevels[cauldronId] -= amountToCollect;
+                        witch.carrying += amountToCollect;
+                        
+                        // Move to next cauldron or return to market
+                        witch.currentCauldronIndex++;
+                        if (witch.currentCauldronIndex >= route.sequence.length) {
+                            // Completed route - return to market and start over
+                            witch.currentCauldronIndex = 0;
+                            witch.carrying = 0; // Drop off at market
+                            witch.nextCollectionTime = currentTime + route.cycleTime;
+                        }
+                    }
+                });
+                
+                // Update cauldron levels (fill/drain)
+                cauldrons.forEach(cauldron => {
+                    const cauldronId = cauldron.id;
+                    const maxVolume = cauldron.max_volume || 1000;
+                    const safetyLevel = maxVolume * safetyMargin;
+                    
+                    const fillRate = (cauldronFillRates[cauldronId] || 0.5) * 60; // L/hr
+                    const drainRate = (cauldronDrainRates[cauldronId] || fillRate * 2); // L/hr (drain faster than fill)
+                    const netFillRate = fillRate - drainRate;
+                    
+                    // Update level
+                    cauldronLevels[cauldronId] += netFillRate * timeStep;
+                    
+                    // Check for overflow beyond safety
+                    if (cauldronLevels[cauldronId] > safetyLevel) {
+                        console.log(`  Overflow at t=${currentTime.toFixed(1)}h: ${cauldronId} at ${cauldronLevels[cauldronId].toFixed(0)}L (safety: ${safetyLevel.toFixed(0)}L)`);
+                        overflowDetected = true;
+                    }
+                    
+                    // Cap at max volume
+                    if (cauldronLevels[cauldronId] > maxVolume) {
+                        cauldronLevels[cauldronId] = maxVolume;
+                    }
+                    
+                    // Don't go below 0
+                    if (cauldronLevels[cauldronId] < 0) {
+                        cauldronLevels[cauldronId] = 0;
+                    }
+                });
+            }
+            
+            return overflowDetected;
+        }
+        
+        function predictCauldronLevels(forecastHours, safetyMargin) {
+            const predictions = [];
+            
+            console.log(`Predicting for ${cauldrons.length} cauldrons with safety margin ${(safetyMargin * 100).toFixed(0)}%`);
+            
+            cauldrons.forEach(cauldron => {
+                const cauldronId = cauldron.id;
+                const maxVolume = cauldron.max_volume || 1000;
+                
+                // Use fill rate (L/min) - convert to L/hr
+                const fillRate = cauldronFillRates[cauldronId] || 0.5; // L/min
+                const fillRatePerHour = fillRate * 60; // L/hr
+                
+                // Use drain rate (L/min) if available - convert to L/hr
+                const drainRate = cauldronDrainRates[cauldronId] || (fillRate * 2); // L/min
+                const drainRatePerHour = drainRate * 60; // L/hr
+                
+                // Get current level
+                const currentLevel = currentLevels[cauldronId] || 0;
+                
+                // Net fill rate (assuming continuous fill)
+                const netFillRate = fillRatePerHour;
+                
+                // Calculate safety level
+                const safetyLevel = maxVolume * safetyMargin;
+                
+                // Calculate REQUIRED collection frequency to stay below safety threshold AFTER forecast period
+                // Predicted level after forecast period (without collection)
+                const predictedLevel = currentLevel + (netFillRate * forecastHours);
+                
+                let requiredCollectionFrequency;
+                if (predictedLevel <= safetyLevel) {
+                    // Won't exceed safety threshold during forecast period - no urgent collection needed
+                    requiredCollectionFrequency = forecastHours;
+                    console.log(`  ${cauldronId}: Safe for entire forecast (${currentLevel.toFixed(0)}L → ${predictedLevel.toFixed(0)}L, safety: ${safetyLevel.toFixed(0)}L)`);
+                } else if (netFillRate <= 0) {
+                    // No fill rate
+                    requiredCollectionFrequency = forecastHours;
+                } else {
+                    // Will exceed safety - calculate how often to collect to keep it below safety at end of forecast
+                    // We need to keep level below safetyLevel after forecastHours
+                    // If we collect every X hours, the level will be: currentLevel + (netFillRate * X)
+                    // We want: currentLevel + (netFillRate * X) <= safetyLevel
+                    // So: X <= (safetyLevel - currentLevel) / netFillRate
+                    requiredCollectionFrequency = (safetyLevel - currentLevel) / netFillRate;
+                    
+                    // Ensure minimum 0.5 hours (30 minutes) for realistic route cycles
+                    if (requiredCollectionFrequency < 0.5) {
+                        console.log(`  ${cauldronId}: Very urgent - only ${requiredCollectionFrequency.toFixed(2)} hrs until safety (${currentLevel.toFixed(0)}L → ${safetyLevel.toFixed(0)}L), fill rate ${fillRatePerHour.toFixed(1)}L/hr`);
+                        requiredCollectionFrequency = 0.5;
+                    }
+                }
+                
+                // Calculate when next collection is due
+                const nextCollectionDue = requiredCollectionFrequency;
+                
+                predictions.push({
+                    cauldron: cauldronId,
+                    location: { lat: cauldron.latitude, lng: cauldron.longitude },
+                    currentLevel,
+                    fillRate: fillRatePerHour,
+                    drainRate: drainRatePerHour,
+                    netFillRate,
+                    predictedLevel,
+                    maxVolume,
+                    safetyLevel,
+                    requiredCollectionFrequency, // Hours between collections needed
+                    nextCollectionDue, // Hours until next collection needed
+                    status: 'Protected' // All cauldrons are protected by proactive scheduling
+                });
+            });
+            
+            // Sort by most frequent collection needs (shortest frequency first)
+            return predictions.sort((a, b) => a.requiredCollectionFrequency - b.requiredCollectionFrequency);
+        }
+        
+        function calculateOptimalWitchesIteratively(forecastHours, safetyMargin) {
+            const WITCH_CAPACITY = 200; // Liters - max a witch can carry at once
+            
+            // Step 1: Create optimal routes using TSP (ignoring time constraints initially)
+            const baseRoutes = createOptimalRoutes();
+            
+            console.log(`Created ${baseRoutes.length} base routes using TSP optimization`);
+            
+            // Step 2: Simulate and add witches iteratively until no overflow AT END of forecast period
+            let numWitches = baseRoutes.length; // Start with one witch per route
+            let overflow = true;
+            let iteration = 0;
+            const MAX_ITERATIONS = 20;
+            
+            while (overflow && iteration < MAX_ITERATIONS) {
+                iteration++;
+                console.log(`\nIteration ${iteration}: Testing with ${numWitches} witches...`);
+                
+                const simulation = simulateCollectionToForecastEnd(baseRoutes, numWitches, forecastHours, safetyMargin, WITCH_CAPACITY);
+                
+                if (simulation.overflowOccurred) {
+                    console.log(`  ❌ Overflow at forecast end in ${simulation.overflowCauldrons.length} cauldrons: ${simulation.overflowCauldrons.join(', ')}`);
+                    numWitches++;
+                } else {
+                    console.log(`  ✅ No overflow! All cauldrons below ${(safetyMargin * 100).toFixed(0)}% at forecast end with ${numWitches} witches`);
+                    overflow = false;
+                }
+            }
+            
+            if (iteration >= MAX_ITERATIONS) {
+                console.warn(`⚠️ Reached max iterations. Using ${numWitches} witches.`);
+            }
+            
+            // Step 3: Create final witch assignments
+            const finalRoutes = assignWitchesToRoutes(baseRoutes, numWitches);
+            const predictions = createPredictions(forecastHours, safetyMargin);
+            
+            return { routes: finalRoutes, totalWitches: numWitches, predictions };
+        }
+        
+        function createOptimalRoutes() {
+            // TSP-based route optimization - create efficient routes without time constraints
+            const routes = [];
+            const unvisited = new Set(cauldrons.map(c => c.id));
+            
+            while (unvisited.size > 0) {
+                const route = [];
+                let currentPos = market ? { lat: market.latitude, lng: market.longitude } : null;
+                let currentId = 'market';
+                let totalDistance = 0;
+                let totalTime = 0;
+                
+                // Build route using nearest neighbor (max 8 cauldrons)
+                while (unvisited.size > 0 && route.length < 8) {
+                    let nearest = null;
+                    let minDist = Infinity;
+                    
+                    unvisited.forEach(cauldronId => {
+                        const cauldron = cauldrons.find(c => c.id === cauldronId);
+                        if (cauldron && currentPos) {
+                            const dist = calculateDistance(currentPos.lat, currentPos.lng, cauldron.latitude, cauldron.longitude);
+                            if (dist < minDist) {
+                                minDist = dist;
+                                nearest = { cauldronId, cauldron, dist };
+                            }
+                        }
+                    });
+                    
+                    if (nearest) {
+                        const travelTime = calculateTravelTime(currentPos, 
+                            { lat: nearest.cauldron.latitude, lng: nearest.cauldron.longitude }, 
+                            currentId, nearest.cauldronId);
+                        
+                        route.push({
+                            cauldron: nearest.cauldronId,
+                            location: { lat: nearest.cauldron.latitude, lng: nearest.cauldron.longitude }
+                        });
+                        
+                        unvisited.delete(nearest.cauldronId);
+                        totalDistance += nearest.dist;
+                        totalTime += travelTime + 5; // Travel + 5 min collection
+                        currentPos = { lat: nearest.cauldron.latitude, lng: nearest.cauldron.longitude };
+                        currentId = nearest.cauldronId;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Return to market
+                if (currentPos && market) {
+                    const returnDist = calculateDistance(currentPos.lat, currentPos.lng, market.latitude, market.longitude);
+                    const returnTime = calculateTravelTime(currentPos, 
+                        { lat: market.latitude, lng: market.longitude }, currentId, 'market');
+                    totalDistance += returnDist;
+                    totalTime += returnTime + 15; // Return + 15 min drop-off
+                }
+                
+                routes.push({
+                    cauldrons: route,
+                    distance: totalDistance,
+                    time: totalTime, // minutes
+                    cycleTime: totalTime / 60 // hours
+                });
+            }
+            
+            return routes;
+        }
+        
+        function simulateCollectionToForecastEnd(routes, numWitches, forecastHours, safetyMargin, witchCapacity) {
+            // Simulate the collection process and check if cauldrons are below safety at FORECAST END
+            const cauldronLevels = {};
+            cauldrons.forEach(c => {
+                cauldronLevels[c.id] = currentLevels[c.id] || 0;
+            });
+            
+            const overflowCauldrons = [];
+            
+            // Distribute witches across routes (proportional to route cycle time)
+            const totalCycleTime = routes.reduce((sum, r) => sum + r.cycleTime, 0);
+            const witchesPerRoute = routes.map((route, idx) => {
+                // Longer routes get more witches
+                const proportion = route.cycleTime / totalCycleTime;
+                const assigned = Math.max(1, Math.round(numWitches * proportion));
+                return Math.min(assigned, Math.floor(numWitches / routes.length) + 2); // Cap per route
+            });
+            
+            // Adjust to match exact total
+            let totalAssigned = witchesPerRoute.reduce((sum, w) => sum + w, 0);
+            let routeIdx = 0;
+            while (totalAssigned < numWitches) {
+                witchesPerRoute[routeIdx % routes.length]++;
+                totalAssigned++;
+                routeIdx++;
+            }
+            while (totalAssigned > numWitches) {
+                const idx = witchesPerRoute.findIndex(w => w > 1);
+                if (idx >= 0) {
+                    witchesPerRoute[idx]--;
+                    totalAssigned--;
+                } else break;
+            }
+            
+            console.log(`  Witch distribution: ${witchesPerRoute.join(', ')} across ${routes.length} routes`);
+            
+            // Calculate collection frequency for each route based on assigned witches
+            routes.forEach((route, idx) => {
+                const witches = witchesPerRoute[idx];
+                if (witches === 0) return;
+                
+                // With multiple witches on a route, they cycle through it
+                const cycleTimeHours = route.cycleTime;
+                const hoursBetweenCollections = cycleTimeHours / witches;
+                
+                console.log(`    Route ${idx + 1}: ${witches} witch(es), ${cycleTimeHours.toFixed(2)}h cycle → collect every ${hoursBetweenCollections.toFixed(2)}h`);
+            });
+            
+            // Simulate fill levels over forecast period
+            const timeStep = 0.1; // hours (6 minutes)
+            for (let t = timeStep; t <= forecastHours; t += timeStep) {
+                // Fill all cauldrons
+                cauldrons.forEach(c => {
+                    const fillRate = (cauldronFillRates[c.id] || 0.5) * 60; // L/hr
+                    cauldronLevels[c.id] += fillRate * timeStep;
+                    
+                    // Cap at max volume
+                    const maxVolume = c.max_volume || 1000;
+                    if (cauldronLevels[c.id] > maxVolume) {
+                        cauldronLevels[c.id] = maxVolume;
+                    }
+                });
+                
+                // Witches collect on their schedules
+                routes.forEach((route, routeIdx) => {
+                    const witches = witchesPerRoute[routeIdx];
+                    if (witches === 0) return;
+                    
+                    const cycleTimeHours = route.cycleTime;
+                    const hoursBetweenCollections = cycleTimeHours / witches;
+                    
+                    // Check if it's time for this route to collect
+                    if (Math.abs(t % hoursBetweenCollections) < timeStep * 0.5) {
+                        let witchLoad = 0;
+                        route.cauldrons.forEach(c => {
+                            const cauldronId = c.cauldron;
+                            const currentLevel = cauldronLevels[cauldronId];
+                            const amountToCollect = Math.min(currentLevel, witchCapacity - witchLoad);
+                            
+                            if (amountToCollect > 0) {
+                                cauldronLevels[cauldronId] -= amountToCollect;
+                                witchLoad += amountToCollect;
+                            }
+                            
+                            if (witchLoad >= witchCapacity) {
+                                return; // Witch is full
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // Check final levels against safety threshold
+            cauldrons.forEach(c => {
+                const maxVolume = c.max_volume || 1000;
+                const safetyLevel = maxVolume * safetyMargin;
+                const finalLevel = cauldronLevels[c.id];
+                
+                if (finalLevel > safetyLevel) {
+                    overflowCauldrons.push(c.id);
+                    console.log(`    ⚠️ ${c.id}: ${finalLevel.toFixed(0)}L > ${safetyLevel.toFixed(0)}L safety (${(safetyMargin * 100).toFixed(0)}%)`);
+                }
+            });
+            
+            return {
+                overflowOccurred: overflowCauldrons.length > 0,
+                overflowCauldrons,
+                finalLevels: cauldronLevels
+            };
+        }
+        
+        function assignWitchesToRoutes(baseRoutes, numWitches) {
+            // Create final witch assignments
+            const routes = [];
+            let witchCounter = 1;
+            
+            baseRoutes.forEach((route, idx) => {
+                const baseWitches = Math.floor(numWitches / baseRoutes.length);
+                const extra = idx < (numWitches % baseRoutes.length) ? 1 : 0;
+                const witchesForRoute = baseWitches + extra;
+                
+                for (let w = 0; w < witchesForRoute; w++) {
+                    routes.push({
+                        witchId: witchCounter++,
+                        cauldrons: route.cauldrons,
+                        distance: route.distance,
+                        time: route.time,
+                        collections: route.cauldrons.length,
+                        witchesNeeded: 1
+                    });
+                }
+            });
+            
+            return routes;
+        }
+        
+        function createPredictions(forecastHours, safetyMargin) {
+            // Create prediction data for display
+            const predictions = [];
+            
+            cauldrons.forEach(cauldron => {
+                const cauldronId = cauldron.id;
+                const maxVolume = cauldron.max_volume || 1000;
+                const fillRate = (cauldronFillRates[cauldronId] || 0.5) * 60; // L/hr
+                const drainRate = (cauldronDrainRates[cauldronId] || (fillRate / 2));
+                const currentLevel = currentLevels[cauldronId] || 0;
+                const predictedLevel = currentLevel + (fillRate * forecastHours);
+                const safetyLevel = maxVolume * safetyMargin;
+                
+                predictions.push({
+                    cauldron: cauldronId,
+                    location: { lat: cauldron.latitude, lng: cauldron.longitude },
+                    currentLevel,
+                    fillRate,
+                    drainRate,
+                    netFillRate: fillRate,
+                    predictedLevel,
+                    maxVolume,
+                    safetyLevel,
+                    requiredCollectionFrequency: 0, // Calculated by simulation
+                    nextCollectionDue: 0,
+                    status: 'Protected'
+                });
+            });
+            
+            return predictions;
+        }
+        
+        // Helper function to get travel time from network data
+        function getTravelTime(fromId, toId) {
+            // Check if we have network data with travel times
+            if (!network || network.length === 0) {
+                // Fallback to Haversine distance calculation
+                return null;
+            }
+            
+            // Look for edge in network (bidirectional check)
+            const edge = network.find(e => 
+                (e.from_node === fromId && e.to_node === toId) ||
+                (e.from_node === toId && e.to_node === fromId)
+            );
+            
+            if (edge) {
+                return edge.travel_time_minutes || edge.travel_time || null;
+            }
+            
+            return null; // No direct connection found
+        }
+        
+        // Helper function to calculate travel time between two points
+        function calculateTravelTime(fromPos, toPos, fromId, toId) {
+            // Try to get network travel time first
+            const networkTime = getTravelTime(fromId, toId);
+            if (networkTime !== null) {
+                return networkTime;
+            }
+            
+            // Fallback to distance-based calculation (30 km/hr = 0.5 km/min)
+            const dist = calculateDistance(fromPos.lat, fromPos.lng, toPos.lat, toPos.lng);
+            return dist / 0.5; // minutes
+        }
+        
+        function predictCauldronLevels(forecastHours, safetyMargin) {
+            const predictions = [];
+            
+            console.log(`Predicting for ${cauldrons.length} cauldrons with safety margin ${(safetyMargin * 100).toFixed(0)}%`);
+            
+            cauldrons.forEach(cauldron => {
+                const cauldronId = cauldron.id;
+                const maxVolume = cauldron.max_volume || 1000;
+                
+                // Use fill rate (L/min) - convert to L/hr
+                const fillRate = cauldronFillRates[cauldronId] || 0.5; // L/min
+                const fillRatePerHour = fillRate * 60; // L/hr
+                
+                // Use drain rate (L/min) if available - convert to L/hr
+                const drainRate = cauldronDrainRates[cauldronId] || (fillRate * 2); // L/min
+                const drainRatePerHour = drainRate * 60; // L/hr
+                
+                // Get current level
+                const currentLevel = currentLevels[cauldronId] || 0;
+                
+                // Net fill rate (assuming continuous fill)
+                const netFillRate = fillRatePerHour;
+                
+                // Calculate safety level
+                const safetyLevel = maxVolume * safetyMargin;
+                
+                // Calculate REQUIRED collection frequency to stay below safety threshold AFTER forecast period
+                // Predicted level after forecast period (without collection)
+                const predictedLevel = currentLevel + (netFillRate * forecastHours);
+                
+                let requiredCollectionFrequency;
+                if (predictedLevel <= safetyLevel) {
+                    // Won't exceed safety threshold during forecast period - no urgent collection needed
+                    requiredCollectionFrequency = forecastHours;
+                    console.log(`  ${cauldronId}: Safe for entire forecast (${currentLevel.toFixed(0)}L → ${predictedLevel.toFixed(0)}L, safety: ${safetyLevel.toFixed(0)}L)`);
+                } else if (netFillRate <= 0) {
+                    // No fill rate
+                    requiredCollectionFrequency = forecastHours;
+                } else {
+                    // Will exceed safety - calculate how often to collect to keep it below safety at end of forecast
+                    // We need to keep level below safetyLevel after forecastHours
+                    // If we collect every X hours, the level will be: currentLevel + (netFillRate * X)
+                    // We want: currentLevel + (netFillRate * X) <= safetyLevel
+                    // So: X <= (safetyLevel - currentLevel) / netFillRate
+                    requiredCollectionFrequency = (safetyLevel - currentLevel) / netFillRate;
+                    
+                    // Ensure minimum 0.5 hours (30 minutes) for realistic route cycles
+                    if (requiredCollectionFrequency < 0.5) {
+                        console.log(`  ${cauldronId}: Very urgent - only ${requiredCollectionFrequency.toFixed(2)} hrs until safety (${currentLevel.toFixed(0)}L → ${safetyLevel.toFixed(0)}L), fill rate ${fillRatePerHour.toFixed(1)}L/hr`);
+                        requiredCollectionFrequency = 0.5;
+                    } else {
+                        console.log(`  ${cauldronId}: Will reach safety in ${requiredCollectionFrequency.toFixed(2)} hrs (${currentLevel.toFixed(0)}L → ${safetyLevel.toFixed(0)}L)`);
+                    }
+                }
+                
+                // Calculate when next collection is due (to stay below safety margin)
+                const nextCollectionDue = requiredCollectionFrequency;
+                
+                predictions.push({
+                    cauldron: cauldronId,
+                    location: { lat: cauldron.latitude, lng: cauldron.longitude },
+                    currentLevel,
+                    fillRate: fillRatePerHour,
+                    drainRate: drainRatePerHour,
+                    netFillRate,
+                    predictedLevel,
+                    maxVolume,
+                    safetyLevel,
+                    requiredCollectionFrequency, // Hours between collections needed
+                    nextCollectionDue, // Hours until next collection needed
+                    status: 'Protected' // All cauldrons are protected by proactive scheduling
+                });
+            });
+            
+            // Sort by most frequent collection needs (shortest frequency first)
+            return predictions.sort((a, b) => a.requiredCollectionFrequency - b.requiredCollectionFrequency);
+        }
+        
+        function calculateOptimalRoutes(predictions, forecastHours) {
+            // Include ALL cauldrons - we're preventing overflow, not reacting to it
+            // Sort by required collection frequency (most frequent first)
+            const sortedPredictions = [...predictions].sort((a, b) => 
+                a.requiredCollectionFrequency - b.requiredCollectionFrequency
+            );
+            
+            if (sortedPredictions.length === 0) {
+                return [];
+            }
+            
+            // TSP-like greedy algorithm for route optimization
+            const routes = [];
+            const unvisited = new Set(sortedPredictions.map(p => p.cauldron));
+            
+            while (unvisited.size > 0) {
+                const route = [];
+                let currentPos = market ? { lat: market.latitude, lng: market.longitude } : null;
+                let currentId = 'market';
+                let totalDistance = 0;
+                let totalTime = 0;
+                
+                // Start from market, visit nearest unvisited cauldrons
+                while (unvisited.size > 0 && route.length < 8) { // Max 8 cauldrons per route
+                    let nearest = null;
+                    let minDist = Infinity;
+                    
+                    unvisited.forEach(cauldronId => {
+                        const pred = predictions.find(p => p.cauldron === cauldronId);
+                        if (pred && currentPos) {
+                            const dist = calculateDistance(currentPos.lat, currentPos.lng, pred.location.lat, pred.location.lng);
+                            // Prioritize cauldrons with shorter collection frequency needs
+                            const adjustedDist = dist * (pred.requiredCollectionFrequency / 10);
+                            if (adjustedDist < minDist) {
+                                minDist = adjustedDist;
+                                nearest = { cauldronId, pred, dist };
+                            }
+                        }
+                    });
+                    
+                    if (nearest) {
+                        // Calculate actual travel time using network data
+                        const travelTime = calculateTravelTime(currentPos, nearest.pred.location, currentId, nearest.cauldronId);
+                        
+                        route.push({
+                            cauldron: nearest.cauldronId,
+                            location: nearest.pred.location,
+                            requiredFrequency: nearest.pred.requiredCollectionFrequency,
+                            nextCollectionDue: nearest.pred.nextCollectionDue
+                        });
+                        unvisited.delete(nearest.cauldronId);
+                        totalDistance += nearest.dist;
+                        totalTime += travelTime; // Use actual network travel time
+                        totalTime += 5; // 5 min collection time per cauldron
+                        currentPos = nearest.pred.location;
+                        currentId = nearest.cauldronId;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Return to market and add 15-minute drop-off time
+                if (currentPos && market) {
+                    const returnDist = calculateDistance(currentPos.lat, currentPos.lng, market.latitude, market.longitude);
+                    const returnTime = calculateTravelTime(currentPos, { lat: market.latitude, lng: market.longitude }, currentId, 'market');
+                    totalDistance += returnDist;
+                    totalTime += returnTime; // Use actual network travel time
+                    totalTime += 15; // 15 minutes to drop off potions at market
+                }
+                
+                // Calculate how often this route needs to run (based on most demanding cauldron)
+                const minFrequency = route.length > 0 ? 
+                    Math.min(...route.map(c => c.requiredFrequency)) : 
+                    forecastHours;
+                
+                routes.push({
+                    cauldrons: route,
+                    distance: totalDistance,
+                    time: totalTime,
+                    collections: route.length,
+                    requiredFrequency: minFrequency, // Must complete within this time
+                    cycleTime: totalTime / 60 // Convert to hours for comparison
+                });
+            }
+            
+            // Ensure all routes can complete within their required frequency
+            // If cycle time > required frequency, we need multiple witches on that route
+            routes.forEach((route, idx) => {
+                if (route.cycleTime > route.requiredFrequency) {
+                    route.witchesNeeded = Math.ceil(route.cycleTime / route.requiredFrequency);
+                    console.log(`  Route ${idx + 1}: Cycle ${route.cycleTime.toFixed(2)}h > Required ${route.requiredFrequency.toFixed(2)}h → ${route.witchesNeeded} witches needed`);
+                } else {
+                    route.witchesNeeded = 1;
+                }
+            });
+            
+            return routes;
+        }
+        
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            // Haversine formula for distance in km
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        function calculateMinimumWitches(routes, forecastHours) {
+            if (routes.length === 0) return 0;
+            
+            // Sum up the witches needed for all routes
+            // Each route may need multiple witches if cycle time exceeds required frequency
+            const totalWitches = routes.reduce((sum, route) => sum + route.witchesNeeded, 0);
+            
+            return totalWitches;
+        }
+        
+        function displayOptimizationStats(minWitches, routes, predictions, forecastHours) {
+            const totalCauldrons = predictions.length;
+            const totalDistance = routes.reduce((sum, r) => sum + r.distance, 0);
+            const avgCycleTime = routes.length > 0 ? routes.reduce((sum, r) => sum + r.time, 0) / routes.length : 0;
+            const maxCycleTime = routes.length > 0 ? Math.max(...routes.map(r => r.time)) : 0;
+            
+            // Calculate average collection frequency needed
+            const avgFrequency = predictions.length > 0 ? 
+                predictions.reduce((sum, p) => sum + p.requiredCollectionFrequency, 0) / predictions.length : 0;
+            
+            document.getElementById('optimization-stats').innerHTML = `
+                <div class="stat-card" style="background: #667eea;">
+                    <h3>${minWitches}</h3>
+                    <p>Witches Required (24/7)</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${routes.length}</h3>
+                    <p>Continuous Routes</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${totalDistance.toFixed(1)} km</h3>
+                    <p>Total Distance per Cycle</p>
+                </div>
+                <div class="stat-card" style="background: #28a745;">
+                    <h3>${totalCauldrons}</h3>
+                    <p>All Cauldrons Protected</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${avgCycleTime.toFixed(0)} min</h3>
+                    <p>Avg Cycle Time</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${avgFrequency.toFixed(1)} hrs</h3>
+                    <p>Avg Collection Frequency</p>
+                </div>
+            `;
+        }
+        
+        function displayWitchSchedule(routes) {
+            const tbody = document.getElementById('witch-schedule-tbody');
+            let witchCounter = 1;
+            
+            tbody.innerHTML = routes.map((route) => {
+                const cauldronList = route.cauldrons.map(c => c.cauldron).join(', ');
+                const routeSequence = route.cauldrons.map(c => c.cauldron).join(' → ');
+                const cyclesPerDay = (24 * 60) / route.time;
+                const witchesNeeded = route.witchesNeeded || 1;
+                
+                // Create a row for each witch needed on this route
+                let rows = '';
+                for (let w = 0; w < witchesNeeded; w++) {
+                    rows += `
+                        <tr>
+                            <td><strong>Witch-${witchCounter++}</strong></td>
+                            <td>${cauldronList}</td>
+                            <td>${route.distance.toFixed(1)} km</td>
+                            <td>${route.time.toFixed(0)} min (${cyclesPerDay.toFixed(1)} cycles/day)${witchesNeeded > 1 ? ` - ${witchesNeeded} witches on this route` : ''}</td>
+                            <td>${route.collections}</td>
+                            <td style="font-size: 12px;">Market → ${routeSequence} → Market (+ 15min drop-off)</td>
+                        </tr>
+                    `;
+                }
+                return rows;
+            }).join('');
+        }
+        
+        function displayCauldronPredictions(predictions) {
+            const tbody = document.getElementById('cauldron-predictions-tbody');
+            tbody.innerHTML = predictions.map(pred => {
+                // Check if predicted level exceeds safety threshold (warning) or max (critical)
+                let statusColor = '#28a745'; // Green - safe
+                let status = 'Protected';
+                
+                if (pred.predictedLevel > pred.maxVolume) {
+                    statusColor = '#dc3545'; // Red - will overflow
+                    status = 'Will Overflow';
+                } else if (pred.predictedLevel > pred.safetyLevel) {
+                    statusColor = '#ffc107'; // Yellow - above safety but below max
+                    status = 'Above Safety';
+                }
+                
+                // Format collection frequency (not used in simulation, just for display)
+                const frequency = 'Continuous';
+                const nextDue = 'As needed';
+                    
+                return `
+                    <tr>
+                        <td><strong>${pred.cauldron}</strong></td>
+                        <td>${pred.currentLevel.toFixed(1)}L</td>
+                        <td>${pred.fillRate.toFixed(1)}L/hr</td>
+                        <td>${pred.drainRate.toFixed(1)}L/hr</td>
+                        <td>${pred.predictedLevel.toFixed(1)}L / ${pred.maxVolume}L${pred.predictedLevel > pred.safetyLevel ? ` ⚠️ (safety: ${pred.safetyLevel.toFixed(0)}L)` : ''}</td>
+                        <td>${frequency}</td>
+                        <td>${nextDue}</td>
+                        <td style="color: ${statusColor}; font-weight: bold;">${status}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function visualizeRoutesOnMap(routes) {
+            // Clear existing route polylines
+            routePolylines.forEach(polyline => optimizationMap.removeLayer(polyline));
+            routePolylines = [];
+            
+            // Add market marker
+            if (market) {
+                L.marker([market.latitude, market.longitude], {
+                    icon: L.divIcon({
+                        className: 'market-marker',
+                        html: '🏰',
+                        iconSize: [30, 30]
+                    })
+                }).addTo(optimizationMap).bindPopup('<b>Market</b>');
+            }
+            
+            // Add cauldron markers
+            cauldrons.forEach(cauldron => {
+                const icon = L.divIcon({
+                    className: 'cauldron-marker',
+                    html: '⚗️',
+                    iconSize: [25, 25]
+                });
+                L.marker([cauldron.latitude, cauldron.longitude], { icon })
+                    .addTo(optimizationMap)
+                    .bindPopup(`<b>${cauldron.id}</b>`);
+            });
+            
+            // Draw routes with different colors
+            const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#43e97b', '#fa709a', '#fee140'];
+            
+            routes.forEach((route, idx) => {
+                const color = colors[idx % colors.length];
+                const coords = [];
+                
+                // Start from market
+                if (market) {
+                    coords.push([market.latitude, market.longitude]);
+                }
+                
+                // Add each cauldron in route
+                route.cauldrons.forEach(c => {
+                    coords.push([c.location.lat, c.location.lng]);
+                });
+                
+                // Return to market
+                if (market) {
+                    coords.push([market.latitude, market.longitude]);
+                }
+                
+                // Draw polyline
+                const polyline = L.polyline(coords, {
+                    color: color,
+                    weight: 3,
+                    opacity: 0.7
+                }).addTo(optimizationMap);
+                
+                polyline.bindPopup(`<b>Witch-${idx + 1}</b><br>Distance: ${route.distance.toFixed(1)} km<br>Time: ${route.time.toFixed(0)} min`);
+                routePolylines.push(polyline);
+            });
+            
+            // Fit map to show all routes
+            if (routePolylines.length > 0) {
+                const group = L.featureGroup(routePolylines);
+                optimizationMap.fitBounds(group.getBounds(), { padding: [50, 50] });
+            }
         }
         
         // Start the app
