@@ -1142,84 +1142,76 @@
     <div id="optimization-tab" class="tab-content">
         <div class="container">
             <div class="info-panel">
-                <h2>🗺️ Route Optimization & Scheduling</h2>
-                <div id="optimization-loading" class="loading">Loading optimization data...</div>
-                <div id="optimization-container" style="display: none;">
+                <h2>🗺️ Daily Pickup Schedule Optimization</h2>
+                <div id="optimization-container">
                     
-                    <!-- Optimization Controls -->
+                    <!-- Introduction -->
                     <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">⚙️ Optimization Settings</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                            <div>
-                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Maximum Fill Level (%)</label>
-                                <input type="number" id="safety-margin" value="90" min="50" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 5px;">
-                                <small style="color: #666;">Collect before cauldrons reach this level</small>
-                            </div>
-                            <div>
-                                <label style="font-weight: bold; display: block; margin-bottom: 5px;">Forecast Period (days)</label>
-                                <input type="number" id="forecast-days" value="7" min="1" max="30" step="1" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 5px;">
-                                <small style="color: #666;">Long-term prediction window (default: 1 week)</small>
-                            </div>
-                        </div>
-                        <button onclick="calculateOptimization()" style="background: #667eea; color: white; border: none; padding: 12px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;">
-                            🔄 Calculate Optimal Routes
+                        <h3 style="color: #667eea; margin-bottom: 15px;">📋 Objective</h3>
+                        <p style="color: #666; margin-bottom: 10px;">
+                            Calculate the minimum number of witches needed to ensure <strong>no cauldron ever overflows</strong>, 
+                            even well into the future. This system accounts for each cauldron's fill rate and creates a 
+                            sustainable daily pickup schedule.
+                        </p>
+                        <button onclick="optimizeDailySchedule()" style="background: #667eea; color: white; border: none; padding: 12px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; margin-top: 10px;">
+                            🔄 Calculate Optimal Daily Schedule
                         </button>
                     </div>
                     
-                    <!-- Optimization Results -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">📊 Optimization Results</h3>
-                        <div class="stats" id="optimization-stats">
-                            <!-- Stats will be populated here -->
+                    <!-- Results Summary -->
+                    <div id="optimization-results" style="display: none;">
+                        <!-- Witch Count & Stats -->
+                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">📊 Optimization Results</h3>
+                            <div class="stats" id="optimization-stats"></div>
                         </div>
-                    </div>
-                    
-                    <!-- Route Map Visualization -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">🗺️ Optimized Route Visualization</h3>
-                        <div id="optimization-map" style="height: 500px; border-radius: 10px;"></div>
-                    </div>
-                    
-                    <!-- Witch Schedule -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">🧙 Witch Assignments (Continuous Operation)</h3>
-                        <table class="ticket-table" id="witch-schedule-table">
-                            <thead>
-                                <tr>
-                                    <th>Witch ID</th>
-                                    <th>Assigned Cauldrons</th>
-                                    <th>Total Distance (km)</th>
-                                    <th>Cycle Time (min)</th>
-                                    <th>Collections per Cycle</th>
-                                    <th>Route</th>
-                                </tr>
-                            </thead>
-                            <tbody id="witch-schedule-tbody">
-                                <!-- Schedule will be populated here -->
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- Cauldron Predictions -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">🔮 Cauldron Fill Level Predictions (Long-term Forecast)</h3>
-                        <table class="ticket-table" id="cauldron-predictions-table">
-                            <thead>
-                                <tr>
-                                    <th>Cauldron</th>
-                                    <th>Current Level (L)</th>
-                                    <th>Fill Rate (L/hr)</th>
-                                    <th>Drain Rate (L/hr)</th>
-                                    <th>Predicted Level (L)</th>
-                                    <th>Collection Frequency</th>
-                                    <th>Next Collection Due</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cauldron-predictions-tbody">
-                                <!-- Predictions will be populated here -->
-                            </tbody>
-                        </table>
+                        
+                        <!-- Route Map -->
+                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">🗺️ Optimized Routes</h3>
+                            <div id="route-map" style="height: 500px; border-radius: 10px; border: 2px solid #667eea;"></div>
+                        </div>
+                        
+                        <!-- Daily Schedule -->
+                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">🧙 Daily Witch Schedule</h3>
+                            <table class="ticket-table">
+                                <thead>
+                                    <tr>
+                                        <th>Witch ID</th>
+                                        <th>Route</th>
+                                        <th>Cauldrons</th>
+                                        <th>Distance (km)</th>
+                                        <th>Time (min)</th>
+                                        <th>Daily Frequency</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="schedule-tbody"></tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Cauldron Analysis -->
+                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">🔮 Cauldron Fill Analysis</h3>
+                            <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
+                                <strong>Note:</strong> Fill Rate = continuous accumulation | Drain Rate = collection speed (reference) | Net Rate = Fill Rate (cauldrons fill continuously between pickups)
+                            </p>
+                            <table class="ticket-table">
+                                <thead>
+                                    <tr>
+                                        <th>Cauldron</th>
+                                        <th>Current (L)</th>
+                                        <th>Max (L)</th>
+                                        <th>Fill Rate (L/hr)</th>
+                                        <th>Collection Speed (L/hr)</th>
+                                        <th>Net Accumulation (L/hr)</th>
+                                        <th>Time to Full</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cauldron-analysis-tbody"></tbody>
+                            </table>
+                        </div>
                     </div>
                     
                 </div>
@@ -2009,6 +2001,19 @@
                 }
                 
                 network = data.edges || data;
+                console.log('Loaded network (raw):', network);
+                
+                // Normalize network edge property names
+                if (network && network.length > 0) {
+                    console.log('Sample edge:', network[0]);
+                    network = network.map(edge => ({
+                        from_node: edge.from_node || edge.from || edge.source || edge.start,
+                        to_node: edge.to_node || edge.to || edge.target || edge.end,
+                        travel_time_minutes: edge.travel_time_minutes || edge.travel_time || edge.time || edge.duration || 0
+                    }));
+                    console.log('Normalized network:', network.slice(0, 3));
+                }
+                
                 console.log('Loaded network:', network);
                 
                 // We'll need cauldron and market coordinates to draw lines
@@ -3746,46 +3751,458 @@
                 return;
             }
             
-            console.log('Initializing Route Optimization...');
-            document.getElementById('optimization-loading').style.display = 'block';
-            document.getElementById('optimization-container').style.display = 'none';
+            console.log('Initializing Route Optimization Tab...');
+            
+            // No old loading elements to hide - new tab is ready to go
+            optimizationInitialized = true;
+        }
+        
+        // Main optimization function - calculate daily pickup schedule
+        function optimizeDailySchedule() {
+            console.log('🔄 Starting daily pickup schedule optimization...');
             
             try {
-                // Initialize the map
-                if (!optimizationMap) {
-                    optimizationMap = L.map('optimization-map').setView([33.2148, -97.13], 13);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                        attribution: '© OpenStreetMap contributors',
-                        maxZoom: 19
-                    }).addTo(optimizationMap);
+                // Step 1: Analyze each cauldron's fill dynamics
+                const cauldronAnalysis = analyzeCauldronFillRates();
+                
+                if (!cauldronAnalysis || cauldronAnalysis.length === 0) {
+                    console.error('No cauldron analysis data available');
+                    alert('Error: No cauldron data available for optimization');
+                    return;
                 }
                 
-                document.getElementById('optimization-loading').style.display = 'none';
-                document.getElementById('optimization-container').style.display = 'block';
+                // Step 2: Create optimal routes using TSP
+                const routes = createOptimalTSPRoutes(cauldronAnalysis);
                 
-                // Run initial optimization
-                calculateOptimization();
+                if (!routes || routes.length === 0) {
+                    console.error('No routes created');
+                    alert('Error: Could not create routes');
+                    return;
+                }
                 
-                optimizationInitialized = true;
+                // Step 3: Calculate minimum witches needed
+                console.log('About to calculate minimum witches...');
+                console.log('Routes before calculation:', routes);
+                console.log('Cauldron analysis before calculation:', cauldronAnalysis);
                 
-                // Fix map rendering
-                setTimeout(() => {
-                    if (optimizationMap) optimizationMap.invalidateSize();
-                }, 200);
+                let witchCount;
+                try {
+                    witchCount = calculateMinimumWitchesForDailySchedule(routes, cauldronAnalysis);
+                } catch (error) {
+                    console.error('❌ Error in calculateMinimumWitchesForDailySchedule:', error);
+                    witchCount = NaN;
+                }
+                
+                console.log('Witch count result:', witchCount, 'isNaN:', isNaN(witchCount));
+                
+                if (isNaN(witchCount) || witchCount < 1) {
+                    console.error('Invalid witch count:', witchCount);
+                    console.error('Routes:', routes);
+                    console.error('Cauldron Analysis:', cauldronAnalysis);
+                    alert('Error: Could not calculate witch count. Check console for details.');
+                    return;
+                }
+                
+                // Step 4: Display results
+                displayOptimizationResults(routes, witchCount, cauldronAnalysis);
+                
+                console.log(`✅ Optimization complete: ${witchCount} witches needed`);
             } catch (error) {
-                console.error('Error initializing optimization:', error);
-                document.getElementById('optimization-loading').textContent = 'Error loading optimization: ' + error.message;
+                console.error('Error during optimization:', error);
+                alert('Optimization failed: ' + error.message);
             }
         }
         
+        // Helper: Calculate distance between two points using Haversine formula
+        function getDistance(pos1, pos2) {
+            if (!pos1 || !pos2) return 0;
+            return calculateDistance(pos1.lat, pos1.lng, pos2.lat, pos2.lng);
+        }
+        
+        // Analyze fill rates and calculate time to overflow for each cauldron
+        function analyzeCauldronFillRates() {
+            const analysis = [];
+            
+            console.log('📊 Analyzing cauldron fill dynamics...');
+            
+            cauldrons.forEach(cauldron => {
+                const id = cauldron.id;
+                const maxVolume = cauldron.max_volume || 1000;
+                const currentLevel = currentLevels[id] || 0;
+                
+                // Fill rate (L/min → L/hr)
+                const fillRate = (cauldronFillRates[id] || 0.5) * 60; // L/hr
+                
+                // Drain rate represents collection efficiency (how fast witches can drain during pickup)
+                // This is NOT continuous - it only happens during collection
+                // For overflow prediction, we only care about FILL rate
+                const drainRate = (cauldronDrainRates[id] || 0) * 60; // L/hr (for reference only)
+                
+                // Net accumulation rate = fill rate (cauldrons continuously fill, only drain when collected)
+                const netRate = fillRate; // Cauldrons accumulate at fill rate between collections
+                
+                // Time until full (hours) - based on fill rate only
+                let timeToFull = Infinity;
+                let status = 'Normal';
+                
+                if (netRate > 0) {
+                    const remainingCapacity = maxVolume - currentLevel;
+                    timeToFull = remainingCapacity / netRate;
+                    
+                    if (timeToFull < 24) {
+                        status = 'Critical';
+                    } else if (timeToFull < 72) {
+                        status = 'Urgent';
+                    } else {
+                        status = 'Normal';
+                    }
+                } else {
+                    status = 'Stable';
+                }
+                
+                analysis.push({
+                    id,
+                    currentLevel,
+                    maxVolume,
+                    fillRate,
+                    drainRate,
+                    netRate,
+                    timeToFull,
+                    status,
+                    location: {
+                        lat: cauldron.latitude,
+                        lng: cauldron.longitude
+                    }
+                });
+                
+                console.log(`  ${id}: Fill ${fillRate.toFixed(1)}L/h, Time to full: ${timeToFull === Infinity ? '∞' : timeToFull.toFixed(1) + 'h'}, Status: ${status}`);
+            });
+            
+            return analysis;
+        }
+        
+        // Create optimal routes using TSP (Traveling Salesman Problem) greedy approach
+        function createOptimalTSPRoutes(cauldronAnalysis) {
+            console.log('🗺️ Creating optimal routes using TSP...');
+            console.log(`  Network has ${network ? network.length : 0} edges`);
+            
+            // Debug: Show what edges exist in network
+            if (network && network.length > 0) {
+                console.log('  Network edges (first 10):');
+                network.slice(0, 10).forEach(e => {
+                    console.log(`    ${e.from_node} ↔ ${e.to_node}: ${e.travel_time_minutes || e.travel_time} min`);
+                });
+                if (network.length > 10) console.log(`    ... and ${network.length - 10} more edges`);
+                
+                // Check which nodes are in the network
+                const nodes = new Set();
+                network.forEach(e => {
+                    nodes.add(e.from_node);
+                    nodes.add(e.to_node);
+                });
+                console.log(`  Network contains ${nodes.size} unique nodes:`, Array.from(nodes).sort());
+            }
+            
+            const routes = [];
+            const unvisited = new Set(cauldronAnalysis.map(c => c.id));
+            const MAX_CAULDRONS_PER_ROUTE = 8;
+            
+            const marketLoc = market ? { lat: market.latitude, lng: market.longitude } : null;
+            
+            while (unvisited.size > 0) {
+                const route = {
+                    cauldrons: [],
+                    sequence: [],
+                    distance: 0,
+                    time: 0
+                };
+                
+                let currentPos = marketLoc;
+                let currentId = 'market';
+                
+                // Greedy TSP: always pick nearest unvisited cauldron based on TRAVEL TIME
+                while (unvisited.size > 0 && route.cauldrons.length < MAX_CAULDRONS_PER_ROUTE) {
+                    let nearest = null;
+                    let minTime = Infinity;
+                    let nearestDist = 0;
+                    
+                    unvisited.forEach(cId => {
+                        const c = cauldronAnalysis.find(ca => ca.id === cId);
+                        // Use actual network travel time, not straight-line distance
+                        const travelTime = calculateTravelTime(currentPos, c.location, currentId, cId);
+                        if (travelTime < minTime) {
+                            minTime = travelTime;
+                            nearest = cId;
+                            nearestDist = getDistance(currentPos, c.location);
+                        }
+                    });
+                    
+                    if (nearest) {
+                        const cauldronData = cauldronAnalysis.find(c => c.id === nearest);
+                        route.sequence.push(nearest);
+                        route.cauldrons.push(cauldronData);
+                        
+                        // Add travel time and collection time
+                        route.time += minTime + 5; // 5 min collection time
+                        route.distance += nearestDist;
+                        
+                        currentPos = cauldronData.location;
+                        currentId = nearest;
+                        unvisited.delete(nearest);
+                    }
+                }
+                
+                // Return to market
+                if (route.cauldrons.length > 0) {
+                    const returnDist = getDistance(currentPos, marketLoc);
+                    const returnTime = calculateTravelTime(currentPos, marketLoc, currentId, 'market');
+                    route.distance += returnDist;
+                    route.time += returnTime + 15; // 15 min dropoff time
+                    
+                    routes.push(route);
+                    console.log(`  Route ${routes.length}: ${route.cauldrons.length} cauldrons, ${route.distance.toFixed(2)}km, ${route.time.toFixed(1)}min`);
+                }
+            }
+            
+            return routes;
+        }
+        
+        // Calculate minimum witches needed based on most urgent cauldron
+        function calculateMinimumWitchesForDailySchedule(routes, cauldronAnalysis) {
+            console.log('🧙 Calculating minimum witches for sustainable daily operation...');
+            console.log('  Routes count:', routes ? routes.length : 'null');
+            console.log('  Cauldron count:', cauldronAnalysis ? cauldronAnalysis.length : 'null');
+            
+            // Validate inputs
+            if (!routes || routes.length === 0) {
+                console.error('No routes provided');
+                return 1;
+            }
+            
+            if (!cauldronAnalysis || cauldronAnalysis.length === 0) {
+                console.error('No cauldron analysis provided');
+                return 1;
+            }
+            
+            // Find the most urgent cauldron (shortest time to full)
+            let minTimeToFull = Infinity;
+            console.log('  Analyzing cauldron fill rates:');
+            cauldronAnalysis.forEach(c => {
+                const ttf = c.timeToFull;
+                console.log(`    ${c.id}: timeToFull = ${ttf.toFixed(1)}h, Status: ${c.status}`);
+                if (ttf < minTimeToFull && ttf > 0 && isFinite(ttf)) {
+                    minTimeToFull = ttf;
+                }
+            });
+            
+            // For sustainable operation, each route must be completed before ANY cauldron overflows
+            // Required frequency = how often we must complete ALL routes (in hours)
+            const requiredFrequency = minTimeToFull; // hours
+            console.log(`  Most urgent cauldron fills in ${minTimeToFull.toFixed(1)} hours`);
+            console.log(`  All routes must be completed every ${requiredFrequency.toFixed(1)} hours to prevent overflow`);
+            
+            // Calculate total route time (time for 1 witch to do all routes sequentially)
+            let totalRouteTime = 0;
+            routes.forEach((r, idx) => {
+                const routeTime = r.time || 0;
+                console.log(`    Route ${idx + 1}: ${routeTime.toFixed(1)} minutes`);
+                totalRouteTime += routeTime;
+            });
+            totalRouteTime = totalRouteTime / 60; // Convert to hours
+            console.log(`  Total sequential route time: ${totalRouteTime.toFixed(2)} hours`);
+            
+            // Validate totalRouteTime
+            if (!totalRouteTime || totalRouteTime <= 0 || isNaN(totalRouteTime)) {
+                console.error('❌ Invalid total route time:', totalRouteTime);
+                return 1;
+            }
+            
+            // For daily sustainable operation:
+            // Witches needed = ceil(total route time / required frequency)
+            // This ensures routes can be completed in parallel fast enough
+            const witchesNeeded = Math.max(1, Math.ceil(totalRouteTime / requiredFrequency));
+            
+            console.log(`  Calculation: ceil(${totalRouteTime.toFixed(2)} / ${requiredFrequency.toFixed(1)})`);
+            console.log(`  Witches needed for sustainable 24/7 operation: ${witchesNeeded}`);
+            
+            // Validate result
+            if (isNaN(witchesNeeded) || !isFinite(witchesNeeded)) {
+                console.error('Invalid witches calculation result');
+                return 1;
+            }
+            
+            // Calculate how many times per day each route must be completed
+            const completionsPerDay = 24 / requiredFrequency;
+            console.log(`  Each route must be completed ${completionsPerDay.toFixed(1)} times per day`);
+            
+            // Assign witches to routes for display purposes
+            routes.forEach((route, idx) => {
+                route.witchId = `Witch-${(idx % witchesNeeded) + 1}`;
+                route.dailyFrequency = Math.ceil(completionsPerDay);
+                route.cycleTime = requiredFrequency;
+            });
+            
+            return witchesNeeded;
+        }
+        
+        // Display optimization results
+        function displayOptimizationResults(routes, witchCount, cauldronAnalysis) {
+            // Show results container
+            document.getElementById('optimization-results').style.display = 'block';
+            
+            // Stats
+            const totalDistance = routes.reduce((sum, r) => sum + r.distance, 0);
+            const totalTime = routes.reduce((sum, r) => sum + r.time, 0);
+            const mostUrgentCauldron = cauldronAnalysis.reduce((min, c) => 
+                c.timeToFull < min.timeToFull ? c : min
+            );
+            const avgTimeToFull = cauldronAnalysis.reduce((sum, c) => sum + (c.timeToFull === Infinity ? 0 : c.timeToFull), 0) / 
+                                  cauldronAnalysis.filter(c => c.timeToFull !== Infinity).length;
+            const cycleFrequency = routes[0]?.dailyFrequency || 1;
+            
+            document.getElementById('optimization-stats').innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-label">Minimum Witches Required (24/7 Operation)</div>
+                    <div class="stat-value">${witchCount} 🧙</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Route Cycles Per Day</div>
+                    <div class="stat-value">${cycleFrequency}x</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Routes</div>
+                    <div class="stat-value">${routes.length}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Total Distance Per Cycle</div>
+                    <div class="stat-value">${totalDistance.toFixed(2)} km</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Time Per Cycle</div>
+                    <div class="stat-value">${(totalTime / 60).toFixed(2)} hours</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Most Urgent Cauldron</div>
+                    <div class="stat-value">${mostUrgentCauldron.id} (${mostUrgentCauldron.timeToFull.toFixed(1)}h)</div>
+                </div>
+            `;
+            
+            // Schedule table
+            let scheduleHTML = '';
+            routes.forEach(route => {
+                scheduleHTML += `
+                    <tr>
+                        <td>${route.witchId}</td>
+                        <td>${route.sequence.join(' → ')}</td>
+                        <td>${route.cauldrons.length}</td>
+                        <td>${route.distance.toFixed(2)}</td>
+                        <td>${route.time.toFixed(0)}</td>
+                        <td>${route.dailyFrequency}x per day</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('schedule-tbody').innerHTML = scheduleHTML;
+            
+            // Cauldron analysis table
+            let analysisHTML = '';
+            cauldronAnalysis.forEach(c => {
+                const statusColor = c.status === 'Critical' ? '#ff4444' : 
+                                   c.status === 'Urgent' ? '#ffaa00' : '#44aa44';
+                analysisHTML += `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td>${c.currentLevel.toFixed(0)}</td>
+                        <td>${c.maxVolume}</td>
+                        <td>${c.fillRate.toFixed(2)}</td>
+                        <td>${c.drainRate.toFixed(2)}</td>
+                        <td style="font-weight: bold; color: #ff8800">${c.netRate.toFixed(2)}</td>
+                        <td>${c.timeToFull === Infinity ? '∞' : c.timeToFull.toFixed(1) + 'h'}</td>
+                        <td style="color: ${statusColor}; font-weight: bold;">${c.status}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('cauldron-analysis-tbody').innerHTML = analysisHTML;
+            
+            // Draw route map
+            displayRouteMap(routes);
+        }
+        
+        // Display routes on map
+        function displayRouteMap(routes) {
+            // Clear existing map if any
+            const mapContainer = document.getElementById('route-map');
+            mapContainer.innerHTML = '';
+            
+            const routeMap = L.map('route-map').setView([cauldrons[0].latitude, cauldrons[0].longitude], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(routeMap);
+            
+            // Add market marker
+            if (market) {
+                L.marker([market.latitude, market.longitude], {
+                    icon: L.icon({
+                        iconUrl: '/static/images/markers/market.png',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32]
+                    })
+                }).addTo(routeMap).bindPopup('<b>Market</b>');
+            }
+            
+            // Colors for different routes
+            const routeColors = ['#667eea', '#ff6b6b', '#4ecdc4', '#ffe66d', '#a8dadc', '#f1a2b7'];
+            
+            // Draw each route
+            routes.forEach((route, idx) => {
+                const color = routeColors[idx % routeColors.length];
+                const marketLoc = market ? [market.latitude, market.longitude] : null;
+                
+                // Draw cauldron markers
+                route.cauldrons.forEach(c => {
+                    const cauldronObj = cauldrons.find(ca => ca.id === c.id);
+                    L.circleMarker([c.location.lat, c.location.lng], {
+                        radius: 8,
+                        fillColor: color,
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    }).addTo(routeMap).bindPopup(`
+                        <b>${c.id}</b><br>
+                        Route: ${route.witchId}<br>
+                        Net Rate: ${c.netRate.toFixed(2)} L/hr<br>
+                        Time to Full: ${c.timeToFull === Infinity ? '∞' : c.timeToFull.toFixed(1) + 'h'}
+                    `);
+                });
+                
+                // Draw route path
+                const routePath = [marketLoc];
+                route.cauldrons.forEach(c => {
+                    routePath.push([c.location.lat, c.location.lng]);
+                });
+                routePath.push(marketLoc); // Return to market
+                
+                L.polyline(routePath, {
+                    color: color,
+                    weight: 3,
+                    opacity: 0.7,
+                    dashArray: '10, 5'
+                }).addTo(routeMap).bindPopup(`<b>${route.witchId}</b><br>${route.time.toFixed(0)} min cycle`);
+            });
+            
+            setTimeout(() => routeMap.invalidateSize(), 100);
+        }
+        
+        // OLD FUNCTION - keeping for compatibility
         function calculateOptimization() {
             console.log('Calculating optimal routes and schedules for continuous operation...');
             
-            const safetyMargin = parseFloat(document.getElementById('safety-margin').value) / 100;
-            const forecastDays = parseFloat(document.getElementById('forecast-days').value);
-            const forecastHours = forecastDays * 24; // Convert days to hours
+            // Daily regime: 24-hour cycle, prevent all overflows (100% max volume target)
+            const safetyMargin = 1.0; // 100% - prevent actual overflow
+            const forecastHours = 24; // Daily regime
             
-            console.log(`Settings: Max Fill Level = ${(safetyMargin * 100).toFixed(0)}%, Forecast = ${forecastDays} days`);
+            console.log(`Settings: Daily regime (24 hours), preventing overflow at 100% capacity`);
             
             // Use simulation-based approach: create optimal routes, simulate, add witches as needed
             const result = calculateOptimalWitchesIteratively(forecastHours, safetyMargin);
@@ -3793,7 +4210,7 @@
             const minWitches = result.totalWitches;
             const predictions = result.predictions;
             
-            console.log(`Final: ${minWitches} witches required for continuous 24/7 operation`);
+            console.log(`Final: ${minWitches} witches required for daily operation`);
             
             // Display results
             displayOptimizationStats(minWitches, routes, predictions, forecastHours);
@@ -4370,7 +4787,7 @@
                 return null;
             }
             
-            // Look for edge in network (bidirectional check)
+            // Look for direct edge in network (bidirectional check)
             const edge = network.find(e => 
                 (e.from_node === fromId && e.to_node === toId) ||
                 (e.from_node === toId && e.to_node === fromId)
@@ -4380,20 +4797,88 @@
                 return edge.travel_time_minutes || edge.travel_time || null;
             }
             
-            return null; // No direct connection found
+            // No direct edge - try to find shortest path through network
+            return findShortestPathTime(fromId, toId);
+        }
+        
+        // Dijkstra's algorithm to find shortest path through network
+        function findShortestPathTime(startId, endId) {
+            if (!network || network.length === 0) return null;
+            
+            // Build adjacency list from network
+            const graph = {};
+            network.forEach(edge => {
+                const from = edge.from_node;
+                const to = edge.to_node;
+                const time = edge.travel_time_minutes || edge.travel_time || 0;
+                
+                if (!graph[from]) graph[from] = [];
+                if (!graph[to]) graph[to] = [];
+                
+                graph[from].push({ node: to, time: time });
+                graph[to].push({ node: from, time: time }); // Bidirectional
+            });
+            
+            // Check if both nodes exist in graph
+            if (!graph[startId] || !graph[endId]) return null;
+            
+            // Dijkstra's algorithm
+            const distances = {};
+            const visited = new Set();
+            const queue = [{ node: startId, dist: 0 }];
+            
+            // Initialize distances
+            Object.keys(graph).forEach(node => {
+                distances[node] = Infinity;
+            });
+            distances[startId] = 0;
+            
+            while (queue.length > 0) {
+                // Get node with minimum distance
+                queue.sort((a, b) => a.dist - b.dist);
+                const { node: current, dist: currentDist } = queue.shift();
+                
+                if (visited.has(current)) continue;
+                visited.add(current);
+                
+                // Found the destination
+                if (current === endId) {
+                    return currentDist;
+                }
+                
+                // Check neighbors
+                if (graph[current]) {
+                    graph[current].forEach(({ node: neighbor, time }) => {
+                        if (!visited.has(neighbor)) {
+                            const newDist = currentDist + time;
+                            if (newDist < distances[neighbor]) {
+                                distances[neighbor] = newDist;
+                                queue.push({ node: neighbor, dist: newDist });
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // No path found
+            return null;
         }
         
         // Helper function to calculate travel time between two points
         function calculateTravelTime(fromPos, toPos, fromId, toId) {
-            // Try to get network travel time first
+            // ONLY use network travel times - no distance fallback
             const networkTime = getTravelTime(fromId, toId);
-            if (networkTime !== null) {
+            if (networkTime !== null && !isNaN(networkTime) && networkTime > 0) {
+                console.log(`  ✓ Network path ${fromId} -> ${toId}: ${networkTime.toFixed(1)} min`);
                 return networkTime;
             }
             
-            // Fallback to distance-based calculation (30 km/hr = 0.5 km/min)
-            const dist = calculateDistance(fromPos.lat, fromPos.lng, toPos.lat, toPos.lng);
-            return dist / 0.5; // minutes
+            // If no network path exists, this is an error - routes should only use network
+            console.error(`  ❌ ERROR: No network path exists for ${fromId} -> ${toId}!`);
+            console.error(`     This means the network data is incomplete or nodes are disconnected.`);
+            
+            // Return a penalty time to indicate this route is invalid
+            return 999; // Large penalty to discourage this route
         }
         
         function predictCauldronLevels(forecastHours, safetyMargin) {
