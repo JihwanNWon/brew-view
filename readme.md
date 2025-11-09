@@ -1,6 +1,7 @@
 BREW VIEW - POTION FLOW MONITORING Installation & Usage Guide (Plain Text Version)
 
-======================================== TABLE OF CONTENTS ========================================
+
+## TABLE OF CONTENTS 
 
 Overview
 
