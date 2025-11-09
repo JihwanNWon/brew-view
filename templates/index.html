@@ -8,6 +8,10 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
+    <!-- Chart.js for trend charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
     <!-- Google Fonts - Magical/RPG font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -41,7 +45,8 @@
         .header h1 {
             color: #667eea;
             text-align: center;
-            font-size: 2em;
+            font-size: 72px; /* roughly match 90px logo height visually */
+            line-height: 90px; /* align with logo height */
             font-family: 'Cinzel', serif;
             font-weight: 700;
             letter-spacing: 2px;
@@ -247,6 +252,28 @@
             text-align: center;
             padding: 20px;
             color: #667eea;
+        }
+        
+        /* Cauldron Trends Styles */
+        .trends-filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        
+        .trend-chart-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-height: 500px;
+        }
+        
+        #trend-chart {
+            width: 100% !important;
+            height: 500px !important;
         }
         
         .error {
@@ -498,6 +525,10 @@
             vertical-align: middle;
             margin-right: 8px;
         }
+        /* Larger map pin specifically */
+        .map-container h2 .inline-icon {
+            height: 2.4em; /* twice normal inline icon height */
+        }
         /* slightly larger inline icon specifically for ticket icons */
         .inline-icon-ticket {
             height: 1.6em;
@@ -695,7 +726,7 @@
         <div class="brand">
             <img class="witch-head" src="{{ url_for('static', filename='images/markers/witchHead.png') }}" alt="Witch" />
             <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Brew View Logo" />
-            <h1>Brew View</h1>
+            <h1>𝕭𝖗𝖊𝖜 𝓥𝖎𝖊𝖜</h1>
             <img class="witch-head flipped" src="{{ url_for('static', filename='images/markers/witchHead.png') }}" alt="Witch" />
         </div>
     </div>
@@ -704,6 +735,7 @@
     <div class="tabs">
     <button class="tab active" onclick="switchTab('map', this)"><img src="{{ url_for('static', filename='images/markers/pin.png') }}" alt="Map" class="inline-icon"> Map</button>
     <button class="tab" onclick="switchTab('tickets', this)"><img src="{{ url_for('static', filename='images/markers/ticket.png') }}" alt="Tickets" class="inline-icon-ticket"> Ticket Logs</button>
+    <button class="tab" onclick="switchTab('trends', this)">📈 Cauldron Trends</button>
     </div>
     
     <!-- Map Tab Content -->
@@ -912,6 +944,84 @@
         </div>
     </div>
     
+    <!-- Cauldron Trends Tab Content -->
+    <div id="trends-tab" class="tab-content">
+        <div class="container">
+            <div class="info-panel">
+                <h2>📈 Cauldron Trends</h2>
+                <div id="trends-loading" class="loading">Loading trend data...</div>
+                <div id="trends-container" style="display: none;">
+                    <!-- Date and Cauldron Filters -->
+                    <div class="trends-filters">
+                        <div class="filter-group">
+                            <label for="trends-year">Year:</label>
+                            <select id="trends-year" onchange="updateTrendsGraph()">
+                                <option value="">Loading...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="trends-month">Month:</label>
+                            <select id="trends-month" onchange="updateTrendsGraph()">
+                                <option value="">Select year first</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="trends-day">Day:</label>
+                            <select id="trends-day" onchange="updateTrendsGraph()">
+                                <option value="">Select month first</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="trends-timezone">Timezone:</label>
+                            <select id="trends-timezone" onchange="updateTrendsGraph()">
+                                <option value="UTC">UTC</option>
+                                <option value="America/New_York">Eastern (ET)</option>
+                                <option value="America/Chicago">Central (CT)</option>
+                                <option value="America/Denver">Mountain (MT)</option>
+                                <option value="America/Los_Angeles">Pacific (PT)</option>
+                                <option value="America/Phoenix">Arizona (MST)</option>
+                                <option value="America/Anchorage">Alaska (AKT)</option>
+                                <option value="Pacific/Honolulu">Hawaii (HST)</option>
+                                <option value="Europe/London">London (GMT/BST)</option>
+                                <option value="Europe/Paris">Paris (CET)</option>
+                                <option value="Asia/Tokyo">Tokyo (JST)</option>
+                                <option value="Asia/Shanghai">Shanghai (CST)</option>
+                                <option value="Australia/Sydney">Sydney (AEDT)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Cauldrons:</label>
+                            <div class="dropdown-filter" id="trends-cauldron-dropdown">
+                                <div class="dropdown-filter-toggle" onclick="toggleFilterDropdown('trends-cauldron-dropdown')">
+                                    <span id="trends-cauldron-label">All Cauldrons</span>
+                                    <span>▾</span>
+                                </div>
+                                <div class="dropdown-filter-menu">
+                                    <div class="checkbox-group" id="trends-cauldron-container">
+                                        <!-- Cauldron checkboxes will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <button onclick="resetTrendsFilters()">Reset Filters</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Trend Chart Container -->
+                    <div class="trend-chart-wrapper">
+                        <canvas id="trend-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
@@ -939,6 +1049,11 @@
             // If switching to map tab, invalidate size to fix rendering issues
             if (tabName === 'map' && map) {
                 setTimeout(() => map.invalidateSize(), 100);
+            }
+            
+            // If switching to trends tab, initialize it
+            if (tabName === 'trends') {
+                setTimeout(() => initTrendsTab(), 100);
             }
         }
 
@@ -2549,6 +2664,363 @@
                 annotateTicketDiscrepancies();
                 applyFiltersAndSort();
             }
+        }
+        
+        // ========================================
+        // CAULDRON TRENDS TAB FUNCTIONS
+        // ========================================
+        
+        let trendChart = null;
+        let trendsSelectedCauldrons = new Set();
+        
+        // Initialize trends tab
+        function initTrendsTab() {
+            if (!cachedData || cachedData.length === 0) {
+                document.getElementById('trends-loading').textContent = 'No trend data available';
+                return;
+            }
+            
+            // Populate year/month/day dropdowns (same as main timeline)
+            populateTrendsDateSelectors();
+            
+            // Populate cauldron filter checkboxes
+            populateTrendsCauldronFilter();
+            
+            // Set default: select all cauldrons
+            trendsSelectedCauldrons = new Set(cauldrons.map(c => c.id));
+            
+            // Set default date to most recent data
+            if (allTimestamps.length > 0) {
+                const latestDate = new Date(allTimestamps[allTimestamps.length - 1]);
+                document.getElementById('trends-year').value = latestDate.getFullYear();
+                populateTrendsMonths();
+                document.getElementById('trends-month').value = latestDate.getMonth() + 1;
+                populateTrendsDays();
+                document.getElementById('trends-day').value = latestDate.getDate();
+            }
+            
+            document.getElementById('trends-loading').style.display = 'none';
+            document.getElementById('trends-container').style.display = 'block';
+            
+            // Initialize the chart
+            updateTrendsGraph();
+        }
+        
+        function populateTrendsDateSelectors() {
+            const years = new Set();
+            allTimestamps.forEach(ts => {
+                const date = new Date(ts);
+                years.add(date.getFullYear());
+            });
+            
+            const yearSelect = document.getElementById('trends-year');
+            yearSelect.innerHTML = '';
+            Array.from(years).sort().forEach(year => {
+                const opt = document.createElement('option');
+                opt.value = year;
+                opt.textContent = year;
+                yearSelect.appendChild(opt);
+            });
+            
+            yearSelect.onchange = () => {
+                populateTrendsMonths();
+                updateTrendsGraph();
+            };
+        }
+        
+        function populateTrendsMonths() {
+            const year = parseInt(document.getElementById('trends-year').value);
+            if (!year) return;
+            
+            const months = new Set();
+            allTimestamps.forEach(ts => {
+                const date = new Date(ts);
+                if (date.getFullYear() === year) {
+                    months.add(date.getMonth() + 1);
+                }
+            });
+            
+            const monthSelect = document.getElementById('trends-month');
+            monthSelect.innerHTML = '';
+            
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            Array.from(months).sort((a, b) => a - b).forEach(month => {
+                const opt = document.createElement('option');
+                opt.value = month;
+                opt.textContent = monthNames[month - 1];
+                monthSelect.appendChild(opt);
+            });
+            
+            monthSelect.onchange = () => {
+                populateTrendsDays();
+                updateTrendsGraph();
+            };
+        }
+        
+        function populateTrendsDays() {
+            const year = parseInt(document.getElementById('trends-year').value);
+            const month = parseInt(document.getElementById('trends-month').value);
+            if (!year || !month) return;
+            
+            const days = new Set();
+            allTimestamps.forEach(ts => {
+                const date = new Date(ts);
+                if (date.getFullYear() === year && date.getMonth() + 1 === month) {
+                    days.add(date.getDate());
+                }
+            });
+            
+            const daySelect = document.getElementById('trends-day');
+            daySelect.innerHTML = '';
+            
+            Array.from(days).sort((a, b) => a - b).forEach(day => {
+                const opt = document.createElement('option');
+                opt.value = day;
+                opt.textContent = day;
+                daySelect.appendChild(opt);
+            });
+        }
+        
+        function populateTrendsCauldronFilter() {
+            const container = document.getElementById('trends-cauldron-container');
+            container.innerHTML = '';
+            
+            cauldrons.forEach(cauldron => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `trends-cauldron-${cauldron.id}`;
+                checkbox.value = cauldron.id;
+                checkbox.checked = true;
+                checkbox.onchange = () => {
+                    if (checkbox.checked) {
+                        trendsSelectedCauldrons.add(cauldron.id);
+                    } else {
+                        trendsSelectedCauldrons.delete(cauldron.id);
+                    }
+                    updateTrendsCauldronLabel();
+                    updateTrendsGraph();
+                };
+                
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = cauldron.id; // Just the ID, no "Cauldron" prefix
+                
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                container.appendChild(div);
+            });
+            
+            updateTrendsCauldronLabel();
+        }
+        
+        function updateTrendsCauldronLabel() {
+            const label = document.getElementById('trends-cauldron-label');
+            const total = cauldrons.length;
+            const selected = trendsSelectedCauldrons.size;
+            
+            if (selected === 0) {
+                label.textContent = 'None Selected';
+            } else if (selected === total) {
+                label.textContent = 'All Cauldrons';
+            } else {
+                label.textContent = `${selected} Selected`;
+            }
+        }
+        
+        function resetTrendsFilters() {
+            // Reset to all cauldrons
+            trendsSelectedCauldrons = new Set(cauldrons.map(c => c.id));
+            cauldrons.forEach(cauldron => {
+                document.getElementById(`trends-cauldron-${cauldron.id}`).checked = true;
+            });
+            updateTrendsCauldronLabel();
+            
+            // Reset to latest date
+            if (allTimestamps.length > 0) {
+                const latestDate = new Date(allTimestamps[allTimestamps.length - 1]);
+                document.getElementById('trends-year').value = latestDate.getFullYear();
+                populateTrendsMonths();
+                document.getElementById('trends-month').value = latestDate.getMonth() + 1;
+                populateTrendsDays();
+                document.getElementById('trends-day').value = latestDate.getDate();
+            }
+            
+            updateTrendsGraph();
+        }
+        
+        function updateTrendsGraph() {
+            const year = parseInt(document.getElementById('trends-year').value);
+            const month = parseInt(document.getElementById('trends-month').value);
+            const day = parseInt(document.getElementById('trends-day').value);
+            const timezone = document.getElementById('trends-timezone').value;
+            
+            if (!year || !month || !day) return;
+            
+                // Create date range for the selected day in the selected timezone
+                // We need to capture all UTC data that falls within this local day
+                const localStartOfDay = new Date(year, month - 1, day, 0, 0, 0);
+                const localEndOfDay = new Date(year, month - 1, day, 23, 59, 59);
+            
+                // We need to look at a wider UTC range to catch all data
+                // For example, if viewing Nov 1 in PT (UTC-7), we need data from Nov 1 07:00 UTC to Nov 2 07:00 UTC
+                const utcStart = new Date(Date.UTC(year, month - 1, day) - 24 * 60 * 60 * 1000); // 1 day before
+                const utcEnd = new Date(Date.UTC(year, month - 1, day + 1) + 24 * 60 * 60 * 1000); // 1 day after
+            
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+                // Filter data with expanded UTC range, then filter by actual local time
+                const dayData = cachedData.filter(record => {
+                    const utcDate = new Date(record.timestamp);
+                    if (utcDate < utcStart || utcDate > utcEnd) return false;
+                
+                    // Convert to local timezone and check if it falls on the selected day
+                    const localDate = new Date(utcDate.toLocaleString('en-US', { timeZone: timezone }));
+                    return localDate.getFullYear() === year &&
+                           localDate.getMonth() === month - 1 &&
+                           localDate.getDate() === day;
+                });
+            
+            if (dayData.length === 0) {
+                    console.log('No data for selected date:', dateStr, 'in timezone:', timezone);
+                return;
+            }
+            
+                console.log(`Found ${dayData.length} records for ${dateStr} in ${timezone}`);
+            
+            // Prepare datasets for selected cauldrons
+            const datasets = [];
+            const colors = [
+                '#667eea', '#764ba2', '#f093fb', '#4facfe',
+                '#43e97b', '#fa709a', '#fee140', '#30cfd0'
+            ];
+            
+            let colorIndex = 0;
+            cauldrons.forEach(cauldron => {
+                if (!trendsSelectedCauldrons.has(cauldron.id)) return;
+                
+                const data = dayData.map(record => {
+                    // Convert UTC timestamp to selected timezone
+                    const utcDate = new Date(record.timestamp);
+                    const localTime = new Date(utcDate.toLocaleString('en-US', { timeZone: timezone }));
+                    
+                    return {
+                        x: localTime,
+                        y: record.cauldron_levels?.[cauldron.id] || 0
+                    };
+                });
+                
+                datasets.push({
+                    label: cauldron.id, // Just the ID, no "Cauldron" prefix
+                    data: data,
+                    borderColor: colors[colorIndex % colors.length],
+                    backgroundColor: colors[colorIndex % colors.length] + '20',
+                    borderWidth: 2,
+                    tension: 0.1,
+                    pointRadius: 1,
+                    pointHoverRadius: 5
+                });
+                
+                colorIndex++;
+            });
+            
+            // Destroy previous chart if exists
+            if (trendChart) {
+                trendChart.destroy();
+            }
+            
+            // Get timezone abbreviation for display
+            const tzAbbr = timezone === 'UTC' ? 'UTC' : 
+                          timezone.includes('New_York') ? 'ET' :
+                          timezone.includes('Chicago') ? 'CT' :
+                          timezone.includes('Denver') ? 'MT' :
+                          timezone.includes('Los_Angeles') ? 'PT' :
+                          timezone.includes('Phoenix') ? 'MST' :
+                          timezone.includes('Anchorage') ? 'AKT' :
+                          timezone.includes('Honolulu') ? 'HST' :
+                          timezone.includes('London') ? 'GMT' :
+                          timezone.includes('Paris') ? 'CET' :
+                          timezone.includes('Tokyo') ? 'JST' :
+                          timezone.includes('Shanghai') ? 'CST' :
+                          timezone.includes('Sydney') ? 'AEDT' : timezone;
+            
+            // Create new chart
+            const ctx = document.getElementById('trend-chart').getContext('2d');
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `Cauldron Levels - ${dateStr} (${tzAbbr})`,
+                            font: {
+                                size: 18,
+                                family: 'Cinzel, serif',
+                                weight: '700'
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(2) + ' L';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                                min: localStartOfDay,
+                                max: localEndOfDay,
+                            time: {
+                                unit: 'hour',
+                                displayFormats: {
+                                    hour: 'HH:mm'
+                                },
+                                tooltipFormat: 'HH:mm:ss'
+                            },
+                            title: {
+                                display: true,
+                                text: `Time of Day (${tzAbbr})`,
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                autoSkip: true,
+                                maxTicksLimit: 25
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Potion Level (L)',
+                                font: {
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
         
         // Start the app
