@@ -1771,14 +1771,46 @@
                             edge.from === 'MARKET' || edge.from === market?.id ||
                             edge.to === 'MARKET' || edge.to === market?.id;
                         
-                        L.polyline([fromCoords, toCoords], {
+                        const travelTime = edge.travel_time_minutes || edge.travel_time || null;
+                        const distance = edge.distance || edge.distance_km || null;
+                        
+                        // Draw the line
+                        const line = L.polyline([fromCoords, toCoords], {
                             color: isMarketConnection ? '#ff6b6b' : '#667eea',
                             weight: 2,
                             opacity: 0.6
-                        }).addTo(map).bindPopup(`
-                            ${edge.from} → ${edge.to}<br>
-                            Travel Time: ${edge.travel_time_minutes || edge.travel_time || '?'} min
-                        `);
+                        }).addTo(map);
+                        
+                        // Add popup with detailed info
+                        let popupContent = `<b>${edge.from} → ${edge.to}</b><br>`;
+                        if (travelTime) popupContent += `⏱️ Travel Time: ${travelTime} min<br>`;
+                        if (distance) popupContent += `📏 Distance: ${distance} km<br>`;
+                        line.bindPopup(popupContent);
+                        
+                        // Add permanent label with travel time at midpoint
+                        if (travelTime) {
+                            const midLat = (fromCoords[0] + toCoords[0]) / 2;
+                            const midLon = (fromCoords[1] + toCoords[1]) / 2;
+                            
+                            L.marker([midLat, midLon], {
+                                icon: L.divIcon({
+                                    className: 'edge-label',
+                                    html: `<div style="
+                                        background: rgba(255,255,255,0.9);
+                                        padding: 2px 6px;
+                                        border-radius: 4px;
+                                        font-size: 11px;
+                                        font-weight: 600;
+                                        color: ${isMarketConnection ? '#c92a2a' : '#4c5fd5'};
+                                        border: 1px solid ${isMarketConnection ? '#ff6b6b' : '#667eea'};
+                                        white-space: nowrap;
+                                        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                                    ">${travelTime} min</div>`,
+                                    iconSize: [60, 20],
+                                    iconAnchor: [30, 10]
+                                })
+                            }).addTo(map);
+                        }
                     }
                 });
                 
@@ -2018,8 +2050,10 @@
 
         // Map: date -> cauldron_id -> [drain events]
         let dailyDrainEvents = {};
-        // Map: cauldron_id -> estimated fill_rate (L/min) calculated from data
-        let cauldronFillRates = {};
+    // Map: cauldron_id -> estimated fill_rate (L/min) calculated from data
+    let cauldronFillRates = {};
+    // Map: cauldron_id -> estimated drain_rate (L/min) calculated from drain sessions
+    let cauldronDrainRates = {};
 
         // Step 1: Estimate fill rates from historical data by analyzing positive deltas
         // Only use data from stable generation periods (not during drains)
@@ -2108,7 +2142,7 @@
             // First estimate fill rates from the data
             estimateFillRates();
             
-            const DRAIN_DURATION_MIN = 15;
+            const drainRatesByCauldron = {}; // cauldron_id -> [session drain rates]
             
             // Group data by date and cauldron
             const seriesByDateCauldron = {}; // date -> cauldron -> [{timestamp, level, delta}]
@@ -2138,6 +2172,7 @@
                     let sessionStartLevel = 0;
                     let sessionEndLevel = 0;
                     let sessionStartTime = null;
+                    let sessionEndTime = null;
                     const events = [];
                     
                     for (let i = 0; i < series.length; i++) {
@@ -2151,25 +2186,34 @@
                                 sessionStartTime = pt.timestamp;
                             }
                             sessionEndLevel = pt.level; // Current level
+                            sessionEndTime = pt.timestamp;
                         } else {
                             // Not draining - close session if one was active
                             if (sessionStart !== null) {
-                                // Session ended - calculate VTrue for this drain event
+                                // Session ended - calculate VTrue for this drain event using actual duration
                                 const fillRate = cauldronFillRates[id] ?? 1.0;
                                 const drainedRaw = sessionStartLevel - sessionEndLevel;
-                                // VTrue = raw drain + generation during drain (fill_rate × 15 min)
-                                const VTrue = drainedRaw + (fillRate * DRAIN_DURATION_MIN);
+                                const durationMin = (i - sessionStart); // consecutive minutes
+                                const VTrue = drainedRaw + (fillRate * durationMin);
+                                const drainRate = durationMin > 0 ? (VTrue / durationMin) : null; // L/min
                                 events.push({
                                     startTime: sessionStartTime,
                                     startLevel: sessionStartLevel,
                                     endLevel: sessionEndLevel,
                                     drainedRaw: drainedRaw,
                                     VTrue: VTrue,
+                                    durationMin: durationMin,
+                                    drainRate: drainRate,
                                     fillRate: fillRate,
                                     matched: false,
                                     matchedTicket: null
                                 });
+                                if (drainRate && isFinite(drainRate)) {
+                                    if (!drainRatesByCauldron[id]) drainRatesByCauldron[id] = [];
+                                    drainRatesByCauldron[id].push(drainRate);
+                                }
                                 sessionStart = null;
+                                sessionEndTime = null;
                             }
                         }
                     }
@@ -2177,17 +2221,25 @@
                     if (sessionStart !== null) {
                         const fillRate = cauldronFillRates[id] ?? 1.0;
                         const drainedRaw = sessionStartLevel - sessionEndLevel;
-                        const VTrue = drainedRaw + (fillRate * DRAIN_DURATION_MIN);
+                        const durationMin = (series.length - sessionStart);
+                        const VTrue = drainedRaw + (fillRate * durationMin);
+                        const drainRate = durationMin > 0 ? (VTrue / durationMin) : null;
                         events.push({
                             startTime: sessionStartTime,
                             startLevel: sessionStartLevel,
                             endLevel: sessionEndLevel,
                             drainedRaw: drainedRaw,
                             VTrue: VTrue,
+                            durationMin: durationMin,
+                            drainRate: drainRate,
                             fillRate: fillRate,
                             matched: false,
                             matchedTicket: null
                         });
+                        if (drainRate && isFinite(drainRate)) {
+                            if (!drainRatesByCauldron[id]) drainRatesByCauldron[id] = [];
+                            drainRatesByCauldron[id].push(drainRate);
+                        }
                     }
                     
                     if (events.length > 0) {
@@ -2195,7 +2247,41 @@
                     }
                 });
             });
+            // Aggregate drain rates per cauldron (median for robustness)
+            cauldronDrainRates = {};
+            Object.keys(drainRatesByCauldron).forEach(id => {
+                const arr = drainRatesByCauldron[id].slice().sort((a,b)=>a-b);
+                const mid = Math.floor(arr.length/2);
+                const median = arr.length % 2 ? arr[mid] : (arr[mid-1] + arr[mid]) / 2;
+                cauldronDrainRates[id] = median;
+            });
             console.log('Detected individual drain events per day/cauldron:', dailyDrainEvents);
+            console.log('Estimated drain rates (L/min) from drain sessions (median):', cauldronDrainRates);
+        }
+
+        // Re-annotate each timestamp's drainStatus using learned fill and drain rates
+        function reAnnotateDrainStatusUsingRates() {
+            if (!cachedData || cachedData.length < 2) return;
+            for (let i = 1; i < cachedData.length; i++) {
+                const prev = cachedData[i-1];
+                const curr = cachedData[i];
+                const prevLevels = prev.cauldron_levels || {};
+                const currLevels = curr.cauldron_levels || {};
+                if (!curr.drainStatus) curr.drainStatus = {};
+                const ids = new Set([...Object.keys(prevLevels), ...Object.keys(currLevels)]);
+                ids.forEach(id => {
+                    const fr = cauldronFillRates[id] ?? 0.5;
+                    const dr = cauldronDrainRates[id] ?? (fr * 2); // fallback: assume drains roughly 2x fill
+                    const net = (currLevels[id] ?? 0) - (prevLevels[id] ?? 0);
+                    // Thresholds
+                    const slowFillThreshold = fr * 0.4; // below 40% of expected fill is suspicious
+                    const drainNetExpected = fr - dr; // typically negative
+                    const drainThreshold = Math.min(slowFillThreshold, drainNetExpected * 0.6); // allow tolerance
+                    const isDraining = net < drainThreshold;
+                    curr.drainStatus[id] = !!isDraining;
+                });
+            }
+            console.log('Re-annotated drainStatus using fill/drain rates');
         }
 
         // Match tickets to drain events and annotate with discrepancy status
@@ -2661,6 +2747,7 @@
 
                 // After both data and tickets are ready, compute discrepancies and refresh view
                 computeDailyDrainEvents();
+                reAnnotateDrainStatusUsingRates();
                 annotateTicketDiscrepancies();
                 applyFiltersAndSort();
             }
