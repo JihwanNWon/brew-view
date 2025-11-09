@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔮 Brew View - Potion Flow Monitoring</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            color: #667eea;
+            text-align: center;
+            font-size: 2em;
+        }
+        
+        .header p {
+            text-align: center;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        
+        .map-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 8px;
+        }
+        
+        .info-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+        
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        /* Timeline Slider */
+        .timeline-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .timeline-container h2 {
+            margin-bottom: 20px;
+        }
+        
+        .date-selector {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            margin-bottom: 15px;
+        }
+        
+        .date-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .date-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            padding-bottom: 15px;
+            color: #667eea;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        .date-group select {
+            padding: 8px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            max-width: 120px;
+        }
+        
+        .slider-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+            margin-bottom: 15px;
+        }
+        
+        .slider-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 8px;
+        }
+        
+        .timeline-slider {
+            width: 100%;
+        }
+        
+        .timeline-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .timeline-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .timeline-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .timeline-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .timeline-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .show-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 30px;
+        }
+        
+        .timestamp-display {
+            font-size: 1.1em;
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .time-slider-container {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .time-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 16px;
+            text-align: center;
+        }
+        
+        /* Custom marker styles */
+        .cauldron-marker {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .market-marker {
+            background: #ff6b6b;
+            border: 3px solid #c92a2a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔮 Brew View</h1>
+        <p>Potion Flow Monitoring Dashboard</p>
+    </div>
+    
+    <div class="container">
+        <div class="map-container">
+            <h2>📍 Cauldron Network Map</h2>
+            <div id="loading" class="loading">Loading cauldron data...</div>
+            <div id="map"></div>
+        </div>
+        
+        <div class="timeline-container">
+            <h2>⏱️ Historical Timeline</h2>
+            
+            <!-- Date and Time Selection Row -->
+            <div class="slider-row">
+                <!-- Date Selectors on the left -->
+                <div class="date-selector">
+                    <div class="date-group">
+                        <label for="year-select">Year</label>
+                        <select id="year-select">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="date-group">
+                        <label for="month-select">Month</label>
+                        <select id="month-select">
+                            <option value="">Select year first</option>
+                        </select>
+                    </div>
+                    <div class="date-group">
+                        <label for="day-select">Day</label>
+                        <select id="day-select">
+                            <option value="">Select month first</option>
+                        </select>
+                    </div>
+                    <div class="date-group">
+                        <label for="timezone-select">Timezone</label>
+                        <select id="timezone-select">
+                            <option value="UTC">UTC</option>
+                            <option value="America/New_York">Eastern (ET)</option>
+                            <option value="America/Chicago">Central (CT)</option>
+                            <option value="America/Denver">Mountain (MT)</option>
+                            <option value="America/Los_Angeles">Pacific (PT)</option>
+                            <option value="America/Phoenix">Arizona (MST)</option>
+                            <option value="America/Anchorage">Alaska (AKT)</option>
+                            <option value="Pacific/Honolulu">Hawaii (HST)</option>
+                            <option value="Europe/London">London (GMT/BST)</option>
+                            <option value="Europe/Paris">Paris (CET)</option>
+                            <option value="Asia/Tokyo">Tokyo (JST)</option>
+                            <option value="Asia/Shanghai">Shanghai (CST)</option>
+                            <option value="Australia/Sydney">Sydney (AEDT)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Time Slider on the right -->
+                <div class="slider-section">
+                    <div class="time-label">Time of Day:</div>
+                    <div class="timeline-info">
+                        <div>
+                            <span class="timestamp-display" id="current-timestamp">Select a date</span>
+                        </div>
+                    </div>
+                    <input type="range" class="timeline-slider" id="time-slider" 
+                           min="0" max="0" value="0" step="1" disabled>
+                </div>
+            </div>
+            
+            <!-- Show Button and Controls underneath -->
+            <div class="timeline-controls">
+                <button class="timeline-btn show-btn" id="btn-show">🔍 Show</button>
+                <button class="timeline-btn" id="btn-first">⏮️ First</button>
+                <button class="timeline-btn" id="btn-prev">⏪ Previous</button>
+                <button class="timeline-btn" id="btn-play">▶️ Play</button>
+                <button class="timeline-btn" id="btn-next">Next ⏩</button>
+                <button class="timeline-btn" id="btn-last">⏭️ Last</button>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <h2>📊 Network Statistics</h2>
+            <div class="stats" id="stats">
+                <!-- Stats will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        let map;
+        let cauldrons = [];
+        let market = null;
+        let network = [];
+        let currentLevels = {};
+        let cauldronMarkers = {};
+        let allTimestamps = [];
+        let filteredTimestamps = [];
+        let timestampIndices = [];
+        let currentIndex = 0;
+        let isPlaying = false;
+        let playInterval = null;
+        let dateGroups = {};
+        let cachedData = null; // Cache all historical data
+        let isDataLoaded = false;
+        let selectedTimezone = 'UTC'; // Default timezone
+        
+        // Initialize map
+        function initMap() {
+            // Default center (will be updated when data loads)
+            map = L.map('map').setView([33.2148, -97.13], 13);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+        }
+        
+        // Fetch current potion levels
+        async function loadCurrentLevels() {
+            try {
+                const response = await fetch('/api/current-levels');
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.warn('Could not load current levels:', data.error);
+                    return;
+                }
+                
+                currentLevels = data.levels || {};
+                console.log('Loaded current levels:', currentLevels);
+            } catch (error) {
+                console.error('Error loading current levels:', error);
+            }
+        }
+        
+        // Load all historical data at once for client-side caching
+        async function loadAllHistoricalData() {
+            if (isDataLoaded && cachedData) {
+                console.log('Using cached data');
+                return true;
+            }
+            
+            try {
+                console.log('Loading full historical data... (this may take a moment)');
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading').textContent = 'Loading historical data...';
+                
+                const response = await fetch('/api/data-full', {
+                    cache: 'force-cache' // Use browser cache if available
+                });
+                const result = await response.json();
+                
+                if (result.error) {
+                    console.error('Could not load historical data:', result.error);
+                    return false;
+                }
+                
+                cachedData = result.data || [];
+                console.log('Loaded and cached', cachedData.length, 'timestamps');
+                
+                // Extract timestamps for organization
+                allTimestamps = cachedData.map(record => record.timestamp);
+                
+                // Organize timestamps by date
+                organizeDateGroups();
+                populateDateDropdowns();
+                
+                isDataLoaded = true;
+                document.getElementById('loading').style.display = 'none';
+                
+                return true;
+            } catch (error) {
+                console.error('Error loading historical data:', error);
+                document.getElementById('loading').textContent = 'Error loading data: ' + error.message;
+                return false;
+            }
+        }
+        
+        // Load timestamps (deprecated - now using loadAllHistoricalData)
+        async function loadTimestamps() {
+            return await loadAllHistoricalData();
+        }
+        
+        // Organize timestamps into year/month/day groups
+        function organizeDateGroups() {
+            dateGroups = {};
+            
+            allTimestamps.forEach((timestamp, index) => {
+                const date = new Date(timestamp);
+                let year, month, day;
+                
+                if (selectedTimezone === 'UTC') {
+                    // Use UTC
+                    year = date.getUTCFullYear();
+                    month = date.getUTCMonth() + 1; // 1-12
+                    day = date.getUTCDate();
+                } else {
+                    // Convert to selected timezone
+                    const dateStr = date.toLocaleString('en-US', { 
+                        timeZone: selectedTimezone,
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric'
+                    });
+                    const parts = dateStr.split('/');
+                    month = parseInt(parts[0]);
+                    day = parseInt(parts[1]);
+                    year = parseInt(parts[2]);
+                }
+                
+                if (!dateGroups[year]) dateGroups[year] = {};
+                if (!dateGroups[year][month]) dateGroups[year][month] = {};
+                if (!dateGroups[year][month][day]) dateGroups[year][month][day] = [];
+                
+                dateGroups[year][month][day].push({
+                    timestamp: timestamp,
+                    index: index
+                });
+            });
+            
+            // Debug: Log sample day to verify all 24 hours
+            const sampleYear = Object.keys(dateGroups)[0];
+            if (sampleYear) {
+                const sampleMonth = Object.keys(dateGroups[sampleYear])[0];
+                const sampleDay = Object.keys(dateGroups[sampleYear][sampleMonth])[0];
+                const dayTimestamps = dateGroups[sampleYear][sampleMonth][sampleDay];
+                console.log(`Sample day ${sampleYear}-${sampleMonth}-${sampleDay} (${selectedTimezone}) has ${dayTimestamps.length} timestamps`);
+                if (dayTimestamps.length > 0) {
+                    console.log('First:', dayTimestamps[0].timestamp);
+                    console.log('Last:', dayTimestamps[dayTimestamps.length - 1].timestamp);
+                }
+            }
+        }
+        
+        // Populate year/month/day dropdowns
+        function populateDateDropdowns() {
+            const yearSelect = document.getElementById('year-select');
+            const years = Object.keys(dateGroups).sort((a, b) => b - a);
+            
+            yearSelect.innerHTML = '<option value="">Select a year</option>';
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            });
+            
+            // Select most recent year by default
+            if (years.length > 0) {
+                yearSelect.value = years[0];
+                updateMonthDropdown(years[0]);
+            }
+        }
+        
+        // Update month dropdown based on selected year
+        function updateMonthDropdown(year) {
+            const monthSelect = document.getElementById('month-select');
+            const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June',
+                              'July', 'August', 'September', 'October', 'November', 'December'];
+            
+            monthSelect.innerHTML = '<option value="">Select a month</option>';
+            
+            if (!year || !dateGroups[year]) return;
+            
+            const months = Object.keys(dateGroups[year]).sort((a, b) => b - a);
+            months.forEach(month => {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = monthNames[parseInt(month)];
+                monthSelect.appendChild(option);
+            });
+            
+            // Select most recent month by default
+            if (months.length > 0) {
+                monthSelect.value = months[0];
+                updateDayDropdown(year, months[0]);
+            }
+        }
+        
+        // Update day dropdown based on selected year and month
+        function updateDayDropdown(year, month) {
+            const daySelect = document.getElementById('day-select');
+            
+            daySelect.innerHTML = '<option value="">Select a day</option>';
+            
+            if (!year || !month || !dateGroups[year] || !dateGroups[year][month]) return;
+            
+            const days = Object.keys(dateGroups[year][month]).sort((a, b) => b - a);
+            days.forEach(day => {
+                const option = document.createElement('option');
+                option.value = day;
+                option.textContent = day;
+                daySelect.appendChild(option);
+            });
+            
+            // Select most recent day by default
+            if (days.length > 0) {
+                daySelect.value = days[0];
+            }
+        }
+        
+        // Filter timestamps for selected date
+        function filterTimestampsForDate(year, month, day) {
+            if (!year || !month || !day || !dateGroups[year] || !dateGroups[year][month] || !dateGroups[year][month][day]) {
+                return [];
+            }
+            
+            return dateGroups[year][month][day];
+        }
+        
+        // Update time slider for selected date
+        function updateTimeSlider() {
+            const year = document.getElementById('year-select').value;
+            const month = document.getElementById('month-select').value;
+            const day = document.getElementById('day-select').value;
+            
+            const dayData = filterTimestampsForDate(year, month, day);
+            filteredTimestamps = dayData;
+            
+            const slider = document.getElementById('time-slider');
+            slider.max = dayData.length - 1;
+            slider.value = dayData.length - 1;
+            slider.disabled = dayData.length === 0;
+            
+            if (dayData.length > 0) {
+                currentIndex = dayData.length - 1;
+                updateTimestampDisplay();
+            }
+        }
+        
+        // Show data for selected date/time
+        async function showSelectedData() {
+            const year = document.getElementById('year-select').value;
+            const month = document.getElementById('month-select').value;
+            const day = document.getElementById('day-select').value;
+            
+            if (!year || !month || !day) {
+                alert('Please select a year, month, and day');
+                return;
+            }
+            
+            updateTimeSlider();
+            
+            if (filteredTimestamps.length > 0) {
+                const sliderIndex = parseInt(document.getElementById('time-slider').value);
+                const actualIndex = filteredTimestamps[sliderIndex].index;
+                await loadLevelsAtIndex(actualIndex);
+            }
+        }
+        
+        // Load levels at specific index (original function remains the same)
+        // Load levels at specific index (now using cached data)
+        function loadLevelsAtIndex(index) {
+            try {
+                // Use cached data instead of API call
+                if (!cachedData || index < 0 || index >= cachedData.length) {
+                    console.error('Invalid index or data not loaded:', index);
+                    return false;
+                }
+                
+                const record = cachedData[index];
+                currentLevels = record.cauldron_levels || {};
+                
+                updateCauldronMarkers();
+                updateStats();
+                
+                return true;
+            } catch (error) {
+                console.error('Error loading levels at index:', error);
+                return false;
+            }
+        }
+        
+        // Update timestamp display
+        function updateTimestampDisplay() {
+            if (!filteredTimestamps || filteredTimestamps.length === 0) return;
+            
+            const sliderIndex = parseInt(document.getElementById('time-slider').value);
+            if (sliderIndex < 0 || sliderIndex >= filteredTimestamps.length) return;
+            
+            const timestamp = filteredTimestamps[sliderIndex].timestamp;
+            const date = new Date(timestamp);
+            
+            const options = {
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: selectedTimezone,
+                timeZoneName: 'short'
+            };
+            
+            document.getElementById('current-timestamp').textContent = 
+                date.toLocaleString('en-US', options);
+        }
+        
+        // Update cauldron markers with new data
+        function updateCauldronMarkers() {
+            cauldrons.forEach(cauldron => {
+                const marker = cauldronMarkers[cauldron.id];
+                if (!marker) return;
+                
+                const maxVolume = cauldron.max_volume || 1000;
+                const currentVolume = currentLevels[cauldron.id] || 0;
+                const fillPercent = ((currentVolume / maxVolume) * 100).toFixed(1);
+                const name = cauldron.name || cauldron.id;
+                
+                // Determine color
+                let markerColor = '🧪';
+                let bgColor = '#eff';
+                let borderColor = '#667eea';
+                
+                if (fillPercent > 90) {
+                    markerColor = '🔴';
+                    bgColor = '#fee';
+                    borderColor = '#c00';
+                } else if (fillPercent > 70) {
+                    markerColor = '🟠';
+                    bgColor = '#ffe';
+                    borderColor = '#f90';
+                } else if (fillPercent > 50) {
+                    markerColor = '🟡';
+                    bgColor = '#ffc';
+                    borderColor = '#fc0';
+                }
+                
+                // Update marker icon
+                const icon = L.divIcon({
+                    className: 'custom-icon',
+                    html: `<div class="cauldron-marker" style="background: ${bgColor}; border-color: ${borderColor};">${markerColor}</div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+                marker.setIcon(icon);
+                
+                // Update popup
+                marker.setPopupContent(`
+                    <b>${name}</b><br>
+                    ID: ${cauldron.id}<br>
+                    <b>Current: ${currentVolume.toFixed(1)}L / ${maxVolume}L</b><br>
+                    <b>Fill Level: ${fillPercent}%</b><br>
+                    Location: ${cauldron.latitude.toFixed(4)}, ${cauldron.longitude.toFixed(4)}
+                `);
+                
+                // Update tooltip
+                marker.setTooltipContent(`${name}<br>${fillPercent}%`);
+            });
+        }
+        
+        // Fetch current potion levels (original function - now used for initial load)
+        async function loadInitialCurrentLevels() {
+            try {
+                const response = await fetch('/api/current-levels');
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.warn('Could not load current levels:', data.error);
+                    return;
+                }
+                
+                currentLevels = data.levels || {};
+                console.log('Loaded current levels:', currentLevels);
+            } catch (error) {
+                console.error('Error loading current levels:', error);
+            }
+        }
+        
+        // Fetch and display cauldrons
+        async function loadCauldrons() {
+            try {
+                const response = await fetch('/api/cauldrons');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                cauldrons = data;
+                console.log('Loaded cauldrons:', cauldrons);
+                
+                // Add cauldron markers (will be updated by timeline)
+                cauldrons.forEach(cauldron => {
+                    const lat = cauldron.latitude;
+                    const lon = cauldron.longitude;
+                    const name = cauldron.name || cauldron.id;
+                    const maxVolume = cauldron.max_volume || 1000;
+                    
+                    // Start with default icon
+                    const currentVolume = 0;
+                    const fillPercent = 0;
+                    
+                    // Determine color based on fill level
+                    let markerColor = '🧪'; // Default blue
+                    if (fillPercent > 90) {
+                        markerColor = '🔴'; // Red - almost full
+                    } else if (fillPercent > 70) {
+                        markerColor = '🟠'; // Orange - getting full
+                    } else if (fillPercent > 50) {
+                        markerColor = '🟡'; // Yellow - half full
+                    } else {
+                        markerColor = '🔵'; // Blue - plenty of space
+                    }
+                    
+                    // Create custom icon
+                    const icon = L.divIcon({
+                        className: 'custom-icon',
+                        html: `<div class="cauldron-marker" style="background: ${fillPercent > 90 ? '#fee' : fillPercent > 70 ? '#ffe' : '#eff'}; border-color: ${fillPercent > 90 ? '#c00' : fillPercent > 70 ? '#f90' : '#667eea'};">${markerColor}</div>`,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15]
+                    });
+                    
+                    // Add marker
+                    const marker = L.marker([lat, lon], { icon: icon }).addTo(map);
+                    
+                    // Store marker reference
+                    cauldronMarkers[cauldron.id] = marker;
+                    
+                    // Add popup with current level info
+                    marker.bindPopup(`
+                        <b>${name}</b><br>
+                        ID: ${cauldron.id}<br>
+                        <b>Current: ${currentVolume.toFixed(1)}L / ${maxVolume}L</b><br>
+                        <b>Fill Level: ${fillPercent}%</b><br>
+                        Location: ${lat.toFixed(4)}, ${lon.toFixed(4)}
+                    `);
+                    
+                    // Add permanent label with fill percentage
+                    marker.bindTooltip(`${name}<br>${fillPercent}%`, {
+                        permanent: true,
+                        direction: 'top',
+                        className: 'cauldron-label',
+                        offset: [0, -15]
+                    });
+                });
+                
+                return true;
+            } catch (error) {
+                console.error('Error loading cauldrons:', error);
+                document.getElementById('loading').innerHTML = 
+                    `<div class="error">Error loading cauldrons: ${error.message}</div>`;
+                return false;
+            }
+        }
+        
+        // Fetch and display market
+        async function loadMarket() {
+            try {
+                const response = await fetch('/api/market');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                market = data;
+                console.log('Loaded market:', market);
+                
+                const lat = market.latitude;
+                const lon = market.longitude;
+                const name = market.name || 'Enchanted Market';
+                
+                // Create custom market icon
+                const icon = L.divIcon({
+                    className: 'custom-icon',
+                    html: '<div class="market-marker">🏪</div>',
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 20]
+                });
+                
+                // Add marker
+                const marker = L.marker([lat, lon], { icon: icon }).addTo(map);
+                
+                // Add popup
+                marker.bindPopup(`
+                    <b>${name}</b><br>
+                    ID: ${market.id}<br>
+                    Central Trading Hub<br>
+                    Location: ${lat.toFixed(4)}, ${lon.toFixed(4)}
+                `);
+                
+                // Add permanent label
+                marker.bindTooltip(name, {
+                    permanent: true,
+                    direction: 'top',
+                    className: 'market-label',
+                    offset: [0, -20]
+                });
+                
+                return true;
+            } catch (error) {
+                console.error('Error loading market:', error);
+                return false;
+            }
+        }
+        
+        // Fetch and display network connections
+        async function loadNetwork() {
+            try {
+                const response = await fetch('/api/network');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                network = data.edges || data;
+                console.log('Loaded network:', network);
+                
+                // We'll need cauldron and market coordinates to draw lines
+                const coords = {};
+                
+                // Map cauldron IDs to coordinates
+                cauldrons.forEach(c => {
+                    coords[c.id] = [c.latitude, c.longitude];
+                });
+                
+                // Add market coordinates
+                if (market) {
+                    coords[market.id] = [market.latitude, market.longitude];
+                    coords['MARKET'] = [market.latitude, market.longitude];
+                    coords['market_001'] = [market.latitude, market.longitude];
+                }
+                
+                // Draw connections
+                network.forEach(edge => {
+                    const fromCoords = coords[edge.from];
+                    const toCoords = coords[edge.to];
+                    
+                    if (fromCoords && toCoords) {
+                        const isMarketConnection = 
+                            edge.from === 'MARKET' || edge.from === market?.id ||
+                            edge.to === 'MARKET' || edge.to === market?.id;
+                        
+                        L.polyline([fromCoords, toCoords], {
+                            color: isMarketConnection ? '#ff6b6b' : '#667eea',
+                            weight: 2,
+                            opacity: 0.6
+                        }).addTo(map).bindPopup(`
+                            ${edge.from} → ${edge.to}<br>
+                            Travel Time: ${edge.travel_time_minutes || edge.travel_time || '?'} min
+                        `);
+                    }
+                });
+                
+                return true;
+            } catch (error) {
+                console.error('Error loading network:', error);
+                return false;
+            }
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const totalCapacity = cauldrons.reduce((sum, c) => sum + (c.max_volume || 1000), 0);
+            const totalCurrent = Object.values(currentLevels).reduce((sum, level) => sum + level, 0);
+            const avgFillPercent = totalCapacity > 0 ? ((totalCurrent / totalCapacity) * 100).toFixed(1) : 0;
+            
+            const statsHtml = `
+                <div class="stat-card">
+                    <h3>${cauldrons.length}</h3>
+                    <p>Total Cauldrons</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${totalCurrent.toFixed(0)}L</h3>
+                    <p>Current Total Volume</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${avgFillPercent}%</h3>
+                    <p>Average Fill Level</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${network.length}</h3>
+                    <p>Network Connections</p>
+                </div>
+                <div class="stat-card">
+                    <h3>${totalCapacity}L</h3>
+                    <p>Total Capacity</p>
+                </div>
+            `;
+            document.getElementById('stats').innerHTML = statsHtml;
+        }
+        
+        // Center map on all markers
+        function centerMap() {
+            const bounds = [];
+            
+            cauldrons.forEach(c => {
+                bounds.push([c.latitude, c.longitude]);
+            });
+            
+            if (market) {
+                bounds.push([market.latitude, market.longitude]);
+            }
+            
+            if (bounds.length > 0) {
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+        
+        // Timeline control functions
+        function setupTimelineControls() {
+            const slider = document.getElementById('time-slider');
+            const btnShow = document.getElementById('btn-show');
+            const btnFirst = document.getElementById('btn-first');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnPlay = document.getElementById('btn-play');
+            const btnNext = document.getElementById('btn-next');
+            const btnLast = document.getElementById('btn-last');
+            const yearSelect = document.getElementById('year-select');
+            const monthSelect = document.getElementById('month-select');
+            const daySelect = document.getElementById('day-select');
+            const timezoneSelect = document.getElementById('timezone-select');
+            
+            // Timezone change - reorganize all data
+            timezoneSelect.addEventListener('change', function() {
+                selectedTimezone = this.value;
+                console.log('Timezone changed to:', selectedTimezone);
+                
+                // Reorganize date groups with new timezone
+                organizeDateGroups();
+                populateDateDropdowns();
+                
+                // Update display if a date is selected
+                if (filteredTimestamps.length > 0) {
+                    updateTimestampDisplay();
+                }
+            });
+            
+            // Date dropdown changes
+            yearSelect.addEventListener('change', function() {
+                updateMonthDropdown(this.value);
+            });
+            
+            monthSelect.addEventListener('change', function() {
+                const year = yearSelect.value;
+                updateDayDropdown(year, this.value);
+            });
+            
+            // Show button
+            btnShow.addEventListener('click', showSelectedData);
+            
+            // Time slider change
+            slider.addEventListener('input', function() {
+                updateTimestampDisplay();
+            });
+            
+            slider.addEventListener('change', async function() {
+                if (filteredTimestamps.length > 0) {
+                    const sliderIndex = parseInt(this.value);
+                    const actualIndex = filteredTimestamps[sliderIndex].index;
+                    await loadLevelsAtIndex(actualIndex);
+                }
+            });
+            
+            // First button
+            btnFirst.addEventListener('click', async function() {
+                if (filteredTimestamps.length > 0) {
+                    slider.value = 0;
+                    const actualIndex = filteredTimestamps[0].index;
+                    await loadLevelsAtIndex(actualIndex);
+                    updateTimestampDisplay();
+                }
+            });
+            
+            // Previous button
+            btnPrev.addEventListener('click', async function() {
+                const sliderIndex = parseInt(slider.value);
+                const newIndex = Math.max(0, sliderIndex - 1);
+                slider.value = newIndex;
+                if (filteredTimestamps.length > 0) {
+                    const actualIndex = filteredTimestamps[newIndex].index;
+                    await loadLevelsAtIndex(actualIndex);
+                    updateTimestampDisplay();
+                }
+            });
+            
+            // Play/Pause button
+            btnPlay.addEventListener('click', function() {
+                if (isPlaying) {
+                    stopPlayback();
+                } else {
+                    startPlayback();
+                }
+            });
+            
+            // Next button
+            btnNext.addEventListener('click', async function() {
+                const sliderIndex = parseInt(slider.value);
+                const newIndex = Math.min(filteredTimestamps.length - 1, sliderIndex + 1);
+                slider.value = newIndex;
+                if (filteredTimestamps.length > 0) {
+                    const actualIndex = filteredTimestamps[newIndex].index;
+                    await loadLevelsAtIndex(actualIndex);
+                    updateTimestampDisplay();
+                }
+            });
+            
+            // Last button
+            btnLast.addEventListener('click', async function() {
+                if (filteredTimestamps.length > 0) {
+                    slider.value = filteredTimestamps.length - 1;
+                    const actualIndex = filteredTimestamps[filteredTimestamps.length - 1].index;
+                    await loadLevelsAtIndex(actualIndex);
+                    updateTimestampDisplay();
+                }
+            });
+        }
+        
+        function startPlayback() {
+            if (filteredTimestamps.length === 0) return;
+            
+            isPlaying = true;
+            document.getElementById('btn-play').textContent = '⏸️ Pause';
+            
+            const slider = document.getElementById('time-slider');
+            
+            playInterval = setInterval(async () => {
+                const sliderIndex = parseInt(slider.value);
+                if (sliderIndex >= filteredTimestamps.length - 1) {
+                    stopPlayback();
+                    return;
+                }
+                
+                const newIndex = sliderIndex + 1;
+                slider.value = newIndex;
+                const actualIndex = filteredTimestamps[newIndex].index;
+                await loadLevelsAtIndex(actualIndex);
+                updateTimestampDisplay();
+            }, 100); // Play at 10 timestamps per second (100ms each)
+        }
+        
+        function stopPlayback() {
+            isPlaying = false;
+            document.getElementById('btn-play').textContent = '▶️ Play';
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+        }
+        
+        // Main initialization
+        async function init() {
+            initMap();
+            
+            const cauldronsLoaded = await loadCauldrons();
+            const marketLoaded = await loadMarket();
+            const networkLoaded = await loadNetwork();
+            const timestampsLoaded = await loadTimestamps();
+            
+            if (cauldronsLoaded && timestampsLoaded) {
+                document.getElementById('loading').style.display = 'none';
+                centerMap();
+                setupTimelineControls();
+                
+                // Load the latest data if available
+                if (cachedData && cachedData.length > 0) {
+                    await loadLevelsAtIndex(cachedData.length - 1);
+                }
+            }
+        }
+        
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
