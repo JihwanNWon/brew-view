@@ -408,6 +408,20 @@
         .ticket-stat-muted {
             opacity: 0.8;
         }
+        /* helper for inline icons */
+        .inline-icon {
+            height: 1.2em;
+            width: auto;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        /* slightly larger inline icon specifically for ticket icons */
+        .inline-icon-ticket {
+            height: 1.6em;
+            width: auto;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
         
         /* Ticket Filters */
         .ticket-filters {
@@ -604,21 +618,21 @@
     
     <!-- Tabs Navigation -->
     <div class="tabs">
-        <button class="tab active" onclick="switchTab('map', this)">📍 Map</button>
-        <button class="tab" onclick="switchTab('tickets', this)">🎫 Ticket Logs</button>
+    <button class="tab active" onclick="switchTab('map', this)"><img src="{{ url_for('static', filename='images/markers/pin.png') }}" alt="Map" class="inline-icon"> Map</button>
+    <button class="tab" onclick="switchTab('tickets', this)"><img src="{{ url_for('static', filename='images/markers/ticket.png') }}" alt="Tickets" class="inline-icon-ticket"> Ticket Logs</button>
     </div>
     
     <!-- Map Tab Content -->
     <div id="map-tab" class="tab-content active">
         <div class="container">
             <div class="map-container">
-                <h2>📍 Cauldron Network Map</h2>
+                <h2><img src="{{ url_for('static', filename='images/markers/pin.png') }}" alt="Map" class="inline-icon"> Cauldron Network Map</h2>
                 <div id="loading" class="loading">Loading cauldron data...</div>
                 <div id="map"></div>
             </div>
         
         <div class="timeline-container">
-            <h2>⏱️ Historical Timeline</h2>
+            <h2><img src="{{ url_for('static', filename='images/markers/hourglass.png') }}" alt="Timeline" class="inline-icon"> Historical Timeline</h2>
             
             <!-- Date and Time Selection Row -->
             <div class="slider-row">
@@ -703,7 +717,7 @@
     <div id="tickets-tab" class="tab-content">
         <div class="container">
             <div class="info-panel">
-                <h2>🎫 Ticket Logs</h2>
+                <h2><img src="{{ url_for('static', filename='images/markers/ticket.png') }}" alt="Tickets" class="inline-icon-ticket"> Ticket Logs</h2>
                 <div id="ticket-loading" class="loading">Loading tickets...</div>
                 <div id="ticket-container" style="display: none;">
                     <!-- Statistics Panel -->
