@@ -47,6 +47,55 @@
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+
+        /* Light mode styles */
+        body.light-mode {
+            background: linear-gradient(135deg, #e8eaf6 0%, #c5cae9 50%, #9fa8da 100%);
+        }
+
+        body.light-mode .header {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        body.light-mode .header h1 {
+            color: #5e35b1;
+            text-shadow: 0 0 20px rgba(94, 53, 177, 0.4), 0 0 40px rgba(94, 53, 177, 0.2);
+        }
+
+        body.light-mode .header p {
+            color: rgba(0, 0, 0, 0.7);
+        }
+
+        body.light-mode .tab {
+            background: rgba(255, 255, 255, 0.6);
+            color: rgba(0, 0, 0, 0.8);
+        }
+
+        body.light-mode .tab.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #5e35b1;
+        }
+
+        body.light-mode .map-container,
+        body.light-mode .info-panel,
+        body.light-mode .bar-chart-container,
+        body.light-mode .timeline-container,
+        body.light-mode .threejs-container {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        body.light-mode .info-panel h2,
+        body.light-mode .map-container h2,
+        body.light-mode .bar-chart-container h2,
+        body.light-mode .timeline-container h2,
+        body.light-mode .threejs-container h2 {
+            color: #5e35b1;
+        }
+
+        body.light-mode .loading {
+            color: #5e35b1;
         }
 
         /* Animated gradient background */
@@ -1116,6 +1165,9 @@
     <div class="floating-potions" id="floating-potions"></div>
     
     <div class="header">
+        <button id="theme-toggle" onclick="toggleTheme()" style="position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: all 0.3s ease; z-index: 100;">
+            🌙 Dark Mode
+        </button>
         <div class="brand">
             <img class="witch-head" src="{{ url_for('static', filename='images/markers/witchHead.png') }}" alt="Witch" />
             <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Brew View Logo" />
@@ -1878,7 +1930,46 @@
         
         // Create potions on page load
         createFloatingPotions();
-        
+
+        // Theme toggle function
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.getElementById('theme-toggle');
+
+            body.classList.toggle('light-mode');
+
+            if (body.classList.contains('light-mode')) {
+                button.textContent = '🌙 Dark Mode';
+                button.style.background = 'rgba(0, 0, 0, 0.2)';
+                button.style.color = '#333';
+                localStorage.setItem('theme', 'light');
+            } else {
+                button.textContent = '☀️ Light Mode';
+                button.style.background = 'rgba(255, 255, 255, 0.2)';
+                button.style.color = 'white';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load saved theme preference
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const body = document.body;
+            const button = document.getElementById('theme-toggle');
+
+            if (savedTheme === 'light') {
+                body.classList.add('light-mode');
+                button.textContent = '🌙 Dark Mode';
+                button.style.background = 'rgba(0, 0, 0, 0.2)';
+                button.style.color = '#333';
+            } else {
+                button.textContent = '☀️ Light Mode';
+            }
+        }
+
+        // Load theme on page load
+        window.addEventListener('DOMContentLoaded', loadTheme);
+
         // Tab switching function
         function switchTab(tabName, element) {
             // Hide all tab contents
@@ -6761,13 +6852,21 @@
         function create3DCauldron(cauldron, fillPercent) {
             const group = new THREE.Group();
 
-            // Better scaling - normalize lat/lng to a reasonable 3D space
-            // Spread cauldrons out in a circle pattern for better visibility
-            const index = cauldron3dObjects.length;
-            const angle = (index / 10) * Math.PI * 2; // Distribute in circle
-            const radius = 15 + (index % 3) * 5; // Vary distance from center
-            const x = Math.cos(angle) * radius;
-            const z = Math.sin(angle) * radius;
+            // Use real lat/lng coordinates - normalized to 3D space
+            // Scale factor to make distances visible but reasonable
+            const scaleFactor = 3000; // Adjust this to change spread
+
+            // Market center coordinates (our origin)
+            const marketLat = 33.2148;
+            const marketLng = -97.13;
+
+            // Convert lat/lng offset to 3D coordinates
+            // X = longitude difference (East-West)
+            // Z = latitude difference (North-South)
+            const x = (cauldron.longitude - marketLng) * scaleFactor;
+            const z = (marketLat - cauldron.latitude) * scaleFactor; // Inverted because Z+ is south in 3D
+
+            console.log(`Cauldron ${cauldron.id} positioned at (${x.toFixed(1)}, ${z.toFixed(1)})`);
 
             // Cauldron base (cylinder) - larger size
             const baseHeight = 3;
@@ -6870,9 +6969,11 @@
         function create3DMarket(market) {
             const group = new THREE.Group();
 
-            // Market at center
+            // Market at center (origin of our coordinate system)
             const x = 0;
             const z = 0;
+
+            console.log(`Market positioned at center (0, 0)`);
 
             // Market building (box) - larger
             const geometry = new THREE.BoxGeometry(6, 8, 6);
