@@ -53,6 +53,14 @@
             justify-content: center;
             gap: 12px;
         }
+        .brand .witch-head {
+            height: 90px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .brand .witch-head.flipped {
+            transform: scaleX(-1);
+        }
         .brand .logo {
             height: 90px;
             width: auto;
@@ -177,6 +185,62 @@
         .stat-card p {
             opacity: 0.9;
             font-size: 0.9em;
+        }
+        
+        /* Bar chart for cauldron levels */
+        .bar-chart-container {
+            background: #e6e6ea;
+            border-radius: 0 10px 10px 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        
+        .bar-chart {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            height: 300px;
+            padding: 10px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 5px;
+        }
+        
+        .bar-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 5px;
+            height: 100%;
+        }
+        
+        .bar {
+            width: 100%;
+            background: #3a5a9a; /* dark blue default */
+            border-radius: 4px 4px 0 0;
+            transition: all 0.3s ease;
+            position: relative;
+            min-height: 5px;
+        }
+        
+        .bar.draining {
+            background: #8b1a1a; /* dark red for draining */
+        }
+        
+        .bar-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #333;
+            text-align: center;
+            word-break: break-word;
+        }
+        
+        .bar-value {
+            font-size: 10px;
+            color: #666;
+            font-weight: 500;
         }
         
         .loading {
@@ -629,10 +693,11 @@
 <body>
     <div class="header">
         <div class="brand">
+            <img class="witch-head" src="{{ url_for('static', filename='images/markers/witchHead.png') }}" alt="Witch" />
             <img class="logo" src="{{ url_for('static', filename='images/logo.png') }}" alt="Brew View Logo" />
             <h1>Brew View</h1>
+            <img class="witch-head flipped" src="{{ url_for('static', filename='images/markers/witchHead.png') }}" alt="Witch" />
         </div>
-        <p>Potion Flow Monitoring Dashboard</p>
     </div>
     
     <!-- Tabs Navigation -->
@@ -720,6 +785,14 @@
             <!-- Show Button -->
             <div class="show-btn-container">
                 <button class="timeline-btn show-btn" id="btn-show">🔍 Show</button>
+            </div>
+        </div>
+        
+        <!-- Bar Chart for Cauldron Levels -->
+        <div class="bar-chart-container">
+            <h2>📊 Cauldron Levels</h2>
+            <div class="bar-chart" id="cauldron-bar-chart">
+                <!-- Bars will be populated by JavaScript -->
             </div>
         </div>
         
@@ -1007,6 +1080,81 @@
                 cachedData = result.data || [];
                 console.log('Loaded and cached', cachedData.length, 'timestamps');
                 
+                // First pass: Calculate expected fill rates for each cauldron
+                const fillRates = {}; // cauldron_id -> L/min
+                const deltasByCauldron = {};
+                
+                // Identify periods of pure generation (no draining) to estimate fill rate
+                for (let i = 1; i < cachedData.length; i++) {
+                    const prev = cachedData[i-1];
+                    const curr = cachedData[i];
+                    const prevLevels = prev.cauldron_levels || {};
+                    const currLevels = curr.cauldron_levels || {};
+                    
+                    Object.keys(currLevels).forEach(id => {
+                        const Vprev = prevLevels[id] ?? 0;
+                        const Vcurr = currLevels[id] ?? 0;
+                        const delta = Vcurr - Vprev;
+                        
+                        // Only collect positive deltas for fill rate estimation
+                        if (delta > 0) {
+                            if (!deltasByCauldron[id]) deltasByCauldron[id] = [];
+                            deltasByCauldron[id].push(delta);
+                        }
+                    });
+                }
+                
+                // Calculate mean fill rate per cauldron
+                Object.keys(deltasByCauldron).forEach(id => {
+                    const deltas = deltasByCauldron[id];
+                    if (deltas.length > 0) {
+                        const sum = deltas.reduce((acc, val) => acc + val, 0);
+                        fillRates[id] = sum / deltas.length;
+                    } else {
+                        fillRates[id] = 0.5; // Default fallback
+                    }
+                });
+                
+                console.log('Calculated fill rates:', fillRates);
+                
+                // Second pass: Detect draining using trend analysis
+                // Look at 5-minute rolling window to detect abnormal fill rate
+                const WINDOW_SIZE = 5; // 5 minutes
+                const DRAIN_THRESHOLD = 0.4; // If actual rate < 40% of expected, it's draining
+                
+                for (let i = 0; i < cachedData.length; i++) {
+                    const record = cachedData[i];
+                    record.drainStatus = {}; // cauldron_id -> boolean
+                    
+                    // Need at least WINDOW_SIZE previous records to analyze trend
+                    if (i >= WINDOW_SIZE) {
+                        const currLevels = record.cauldron_levels || {};
+                        
+                        Object.keys(currLevels).forEach(cauldronId => {
+                            const expectedFillRate = fillRates[cauldronId] || 0.5;
+                            
+                            // Calculate actual rate over the window
+                            const windowStart = cachedData[i - WINDOW_SIZE];
+                            const windowStartLevel = windowStart.cauldron_levels?.[cauldronId] || 0;
+                            const currentLevel = currLevels[cauldronId] || 0;
+                            
+                            // Actual change over WINDOW_SIZE minutes
+                            const actualChange = currentLevel - windowStartLevel;
+                            const actualRate = actualChange / WINDOW_SIZE; // L/min
+                            
+                            // Expected change over WINDOW_SIZE minutes
+                            const expectedChange = expectedFillRate * WINDOW_SIZE;
+                            
+                            // If actual rate is significantly less than expected, cauldron is being drained
+                            const isDraining = actualRate < (expectedFillRate * DRAIN_THRESHOLD);
+                            
+                            record.drainStatus[cauldronId] = isDraining;
+                        });
+                    }
+                }
+                
+                console.log('Annotated drain status using trend analysis (5-min window, 40% threshold)');
+                
                 // Extract timestamps for organization
                 allTimestamps = cachedData.map(record => record.timestamp);
                 
@@ -1271,6 +1419,61 @@
                 
                 // Update tooltip
                 marker.setTooltipContent(`${name}<br>${fillPercent}%`);
+            });
+            
+            // Update bar chart
+            updateBarChart();
+        }
+        
+        // Update bar chart with current cauldron levels
+        function updateBarChart() {
+            const barChart = document.getElementById('cauldron-bar-chart');
+            if (!barChart || !cauldrons || cauldrons.length === 0) return;
+            
+            // Get current slider index to check for draining
+            const sliderIndex = parseInt(document.getElementById('time-slider').value);
+            
+            // filteredTimestamps contains {timestamp, index} objects
+            const currentEntry = filteredTimestamps?.[sliderIndex];
+            if (!currentEntry) return;
+            
+            const globalIndex = currentEntry.index;
+            const currentRecord = cachedData?.[globalIndex];
+            if (!currentRecord) return;
+            
+            const drainStatus = currentRecord.drainStatus || {};
+            
+            barChart.innerHTML = '';
+            
+            cauldrons.forEach(cauldron => {
+                const maxVolume = cauldron.max_volume || 1000;
+                const currentVolume = currentLevels[cauldron.id] || 0;
+                const fillPercent = ((currentVolume / maxVolume) * 100).toFixed(1);
+                
+                // Use pre-calculated drain status
+                const isDraining = drainStatus[cauldron.id] || false;
+                
+                const barItem = document.createElement('div');
+                barItem.className = 'bar-item';
+                
+                const bar = document.createElement('div');
+                bar.className = `bar${isDraining ? ' draining' : ''}`;
+                // Use 80% of available height for the bar area, scale fillPercent accordingly
+                bar.style.height = `${Math.max(fillPercent * 0.8, 2)}%`;
+                bar.title = `${cauldron.name || cauldron.id}: ${fillPercent}%${isDraining ? ' (DRAINING)' : ''}`;
+                
+                const value = document.createElement('div');
+                value.className = 'bar-value';
+                value.textContent = `${fillPercent}%`;
+                
+                const label = document.createElement('div');
+                label.className = 'bar-label';
+                label.textContent = cauldron.name || cauldron.id;
+                
+                barItem.appendChild(bar);
+                barItem.appendChild(value);
+                barItem.appendChild(label);
+                barChart.appendChild(barItem);
             });
         }
         
