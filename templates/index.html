@@ -144,6 +144,15 @@
             color: #000000;
         }
 
+        body.light-mode #optimization-results p {
+            color: #000000;
+        }
+
+        body.light-mode #optimization-results .stat-label,
+        body.light-mode #optimization-results .stat-value {
+            color: #000000;
+        }
+
         /* Spider image styling */
         .spider-img {
             background: transparent;
@@ -820,6 +829,7 @@
         .ticket-table td {
             padding: 10px 12px;
             border-bottom: 1px solid #e0e0e0;
+            color: #ffffff;
         }
         
         .ticket-table tr:hover {
@@ -841,6 +851,16 @@
             border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
+        }
+
+        /* Optimization results text colors */
+        #optimization-results p {
+            color: #ffffff;
+        }
+
+        #optimization-results .stat-label,
+        #optimization-results .stat-value {
+            color: #ffffff;
         }
         
         .pagination {
@@ -1281,14 +1301,11 @@
         }
     </style>
 </head>
-<body>
+<body class="light-mode">
     <!-- Floating potion decorations -->
     <div class="floating-potions" id="floating-potions"></div>
     
     <div class="header">
-        <button id="theme-toggle" onclick="toggleTheme()" style="position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; transition: all 0.3s ease; z-index: 100;">
-            🌙 Dark Mode
-        </button>
         <img src="{{ url_for('static', filename='images/markers/spider.png') }}" alt="Spider" class="spider-img" style="position: absolute; top: 0px; left: 0px; width: 256px; height: 128px; z-index: 100;" />
         <div class="brand">
             <img class="witch-head" src="{{ url_for('static', filename='images/markers/witchHead.png') }}" alt="Witch" />
@@ -2134,44 +2151,7 @@
         // Create potions on page load
         createFloatingPotions();
 
-        // Theme toggle function
-        function toggleTheme() {
-            const body = document.body;
-            const button = document.getElementById('theme-toggle');
-
-            body.classList.toggle('light-mode');
-
-            if (body.classList.contains('light-mode')) {
-                button.textContent = '🌙 Dark Mode';
-                button.style.background = 'rgba(0, 0, 0, 0.2)';
-                button.style.color = '#333';
-                localStorage.setItem('theme', 'light');
-            } else {
-                button.textContent = '☀️ Light Mode';
-                button.style.background = 'rgba(255, 255, 255, 0.2)';
-                button.style.color = 'white';
-                localStorage.setItem('theme', 'dark');
-            }
-        }
-
-        // Load saved theme preference
-        function loadTheme() {
-            const savedTheme = localStorage.getItem('theme');
-            const body = document.body;
-            const button = document.getElementById('theme-toggle');
-
-            if (savedTheme === 'light') {
-                body.classList.add('light-mode');
-                button.textContent = '🌙 Dark Mode';
-                button.style.background = 'rgba(0, 0, 0, 0.2)';
-                button.style.color = '#333';
-            } else {
-                button.textContent = '☀️ Light Mode';
-            }
-        }
-
-        // Load theme on page load
-        window.addEventListener('DOMContentLoaded', loadTheme);
+        // Theme toggle functions removed - light mode is now default
 
         // Tab switching function
         function switchTab(tabName, element) {
@@ -6145,7 +6125,7 @@
                 concurrentHTML += `</div>`;
                 
                 // Detailed conflict report
-                concurrentHTML += `<div style="background: #fff; padding: 10px; margin: 10px 0; border: 1px solid #dc3545; border-radius: 4px;">`;
+                concurrentHTML += `<div style="background: #fff; padding: 10px; margin: 10px 0; border: 1px solid #dc3545; border-radius: 4px; color: #000000;">`;
                 concurrentHTML += `<strong>Detailed Conflict Report:</strong><br>`;
                 conflictDetails.forEach((conf, idx) => {
                     concurrentHTML += `${idx + 1}. <strong>${conf.cauldron}</strong>: ${conf.witch1} visits ${conf.visit1} ⚡ ${conf.witch2} visits ${conf.visit2}<br>`;
@@ -6170,8 +6150,8 @@
                 
                 const borderColor = hasConflict ? '#dc3545' : '#28a745';
                 const bgColor = hasConflict ? 'rgba(248, 215, 218, 0.3)' : 'rgba(255,255,255,0.8)';
-                
-                concurrentHTML += `<div style="background: ${bgColor}; padding: 8px; margin: 5px 0; border-radius: 4px; border: 1px solid ${borderColor};">`;
+
+                concurrentHTML += `<div style="background: ${bgColor}; padding: 8px; margin: 5px 0; border-radius: 4px; border: 1px solid ${borderColor}; color: #000000;">`;
                 concurrentHTML += `<strong>${cauldronId}</strong> (fills in ${timeToFull}h) - visited ${visits.length}x per day: `;
                 concurrentHTML += visits.map(v => `${v.witch} at ${v.visitStartHour.toFixed(2)}h (±${(5/60).toFixed(2)}h)`).join(', ');
                 if (hasConflict) {
