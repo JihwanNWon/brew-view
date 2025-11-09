@@ -143,6 +143,70 @@
             color: #5e35b1;
         }
 
+        /* Light mode ticket table styles */
+        body.light-mode .ticket-table td {
+            color: #333;
+            border-bottom: 1px solid #bdbdbd;
+        }
+
+        body.light-mode .ticket-table tr:hover {
+            background: #e3f2fd;
+        }
+
+        body.light-mode .ticket-table tr.suspicious {
+            background: #ffcdd2;
+        }
+
+        body.light-mode .ticket-table tr.suspicious:hover {
+            background: #ef9a9a;
+        }
+
+        /* Chart container styles */
+        .chart-container {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        body.light-mode .chart-container {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .chart-container h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        body.light-mode .chart-container h3 {
+            color: #5e35b1;
+        }
+
+        body.light-mode .chart-container p {
+            color: #424242 !important;
+        }
+
+        /* Dark mode fixes for readability */
+        body:not(.light-mode) .bar-chart-container {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        body:not(.light-mode) .bar-chart-container h2 {
+            color: white;
+        }
+
+        body:not(.light-mode) .map-container h2 {
+            color: white;
+        }
+
+        body:not(.light-mode) .ticket-table td {
+            color: white;
+        }
+
+        body:not(.light-mode) .ticket-table th {
+            color: white;
+        }
+
         /* Animated gradient background */
         body::before {
             content: '';
@@ -1654,8 +1718,8 @@
                     </div>
                     
                     <!-- Courier Performance -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">🚚 Courier Performance</h3>
+                    <div class="chart-container">
+                        <h3>🚚 Courier Performance</h3>
                         <div style="margin-bottom: 20px;">
                             <canvas id="courier-performance-chart" style="max-height: 400px;"></canvas>
                         </div>
@@ -1677,8 +1741,8 @@
                     </div>
                     
                     <!-- Cauldron Efficiency -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">⚗️ Cauldron Efficiency</h3>
+                    <div class="chart-container">
+                        <h3>⚗️ Cauldron Efficiency</h3>
                         <div style="margin-bottom: 20px;">
                             <canvas id="cauldron-efficiency-chart" style="max-height: 400px;"></canvas>
                         </div>
@@ -1699,8 +1763,8 @@
                     </div>
                     
                     <!-- Route Efficiency -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">🛣️ Network Efficiency</h3>
+                    <div class="chart-container">
+                        <h3>🛣️ Network Efficiency</h3>
                         <div class="stats" id="network-stats">
                             <!-- Network stats will be populated here -->
                         </div>
@@ -1719,8 +1783,8 @@
                 <div id="optimization-container">
                     
                     <!-- Introduction -->
-                    <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                        <h3 style="color: #667eea; margin-bottom: 15px;">📋 Objective</h3>
+                    <div class="chart-container">
+                        <h3>📋 Objective</h3>
                         <p style="color: #666; margin-bottom: 10px;">
                             Calculate the minimum number of witches needed to ensure <strong>no cauldron ever overflows</strong>, 
                             even well into the future. This system accounts for each cauldron's fill rate and creates a 
@@ -1734,20 +1798,20 @@
                     <!-- Results Summary -->
                     <div id="optimization-results" style="display: none;">
                         <!-- Witch Count & Stats -->
-                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                            <h3 style="color: #667eea; margin-bottom: 15px;">📊 Optimization Results</h3>
+                        <div class="chart-container">
+                            <h3>📊 Optimization Results</h3>
                             <div class="stats" id="optimization-stats"></div>
                         </div>
                         
                         <!-- Route Map -->
-                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                            <h3 style="color: #667eea; margin-bottom: 15px;">🗺️ Optimized Routes</h3>
+                        <div class="chart-container">
+                            <h3>🗺️ Optimized Routes</h3>
                             <div id="route-map" style="height: 500px; border-radius: 10px; border: 2px solid #667eea;"></div>
                         </div>
                         
                         <!-- Daily Schedule -->
-                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                            <h3 style="color: #667eea; margin-bottom: 15px;">🧙 Daily Witch Schedule (24-Hour View)</h3>
+                        <div class="chart-container">
+                            <h3>🧙 Daily Witch Schedule (24-Hour View)</h3>
                             <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
                                 <strong>Note:</strong> Each witch's routes throughout a 24-hour period. Multiple witches may visit the same cauldron at different times.
                             </p>
@@ -1771,8 +1835,8 @@
                         </div>
                         
                         <!-- Cauldron Analysis -->
-                        <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                            <h3 style="color: #667eea; margin-bottom: 15px;">🔮 Cauldron Fill Analysis</h3>
+                        <div class="chart-container">
+                            <h3>🔮 Cauldron Fill Analysis</h3>
                             <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
                                 <strong>Note:</strong> Fill Rate = continuous accumulation | Drain Rate = collection speed (reference) | Net Rate = Fill Rate (cauldrons fill continuously between pickups)
                             </p>
@@ -5789,7 +5853,7 @@
             // Insert before the cauldron analysis table
             const cauldronAnalysisDiv = document.querySelector('#cauldron-analysis-tbody').parentElement.parentElement;
             const analysisSection = document.createElement('div');
-            analysisSection.style.cssText = 'background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;';
+            analysisSection.className = 'chart-container';
             analysisSection.innerHTML = concurrentHTML;
             cauldronAnalysisDiv.parentElement.insertBefore(analysisSection, cauldronAnalysisDiv);
         }
