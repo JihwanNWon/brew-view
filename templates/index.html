@@ -2059,6 +2059,11 @@
                 button.style.color = 'white';
                 localStorage.setItem('theme', 'dark');
             }
+
+            // Update 3D scene colors if it's initialized
+            if (typeof update3DTheme === 'function') {
+                update3DTheme();
+            }
         }
 
         // Load saved theme preference
@@ -6816,8 +6821,14 @@
 
             // Scene setup
             scene3d = new THREE.Scene();
-            scene3d.background = new THREE.Color(0x0c0b2f);
-            scene3d.fog = new THREE.Fog(0x0c0b2f, 50, 200);
+
+            // Set colors based on current theme
+            const isLightMode = document.body.classList.contains('light-mode');
+            const bgColor = isLightMode ? 0xe8f0ff : 0x0c0b2f;
+            const fogColor = isLightMode ? 0xe8f0ff : 0x0c0b2f;
+
+            scene3d.background = new THREE.Color(bgColor);
+            scene3d.fog = new THREE.Fog(fogColor, 50, 200);
 
             // Camera setup - better initial position
             camera3d = new THREE.PerspectiveCamera(
@@ -7370,6 +7381,18 @@
 
             camera3d.lookAt(controls3d.target);
             controls3d.update();
+        }
+
+        // Update 3D scene colors based on theme
+        function update3DTheme() {
+            if (!scene3d) return;
+
+            const isLightMode = document.body.classList.contains('light-mode');
+            const bgColor = isLightMode ? 0xe8f0ff : 0x0c0b2f;
+            const fogColor = isLightMode ? 0xe8f0ff : 0x0c0b2f;
+
+            scene3d.background = new THREE.Color(bgColor);
+            scene3d.fog.color = new THREE.Color(fogColor);
         }
 
         // Update 3D cauldrons with current timeline data
