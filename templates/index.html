@@ -8,6 +8,11 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
+    <!-- Google Fonts - Magical/RPG font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -21,6 +26,12 @@
             min-height: 100vh;
         }
         
+        h2 {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        
         .header {
             background: #2a173f; /* lighter purple than body #120b2f */
             padding: 20px;
@@ -31,6 +42,10 @@
             color: #667eea;
             text-align: center;
             font-size: 2em;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
         }
         .brand {
             display: flex;
@@ -39,9 +54,12 @@
             gap: 12px;
         }
         .brand .logo {
-            height: 44px;
+            height: 90px;
             width: auto;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.2));
         }
         
         .header p {
@@ -108,7 +126,7 @@
         
         .map-container {
             background: #e6e6ea; /* slightly dimmer light gray */
-            border-radius: 10px;
+            border-radius: 0 10px 10px 10px; /* top-left sharp, others rounded */
             padding: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
             margin-bottom: 20px;
@@ -131,7 +149,7 @@
         
         .info-panel {
             background: #e6e6ea; /* slightly dimmer light gray */
-            border-radius: 10px;
+            border-radius: 0 10px 10px 10px; /* top-left sharp, others rounded */
             padding: 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
@@ -225,13 +243,14 @@
             gap: 20px;
             align-items: flex-end;
             margin-bottom: 15px;
+            margin-top: -5px;
         }
         
         .slider-section {
             flex: 1;
             display: flex;
             flex-direction: column;
-            margin-bottom: 8px;
+            margin-bottom: 0px;
         }
         
         .timeline-slider {
@@ -380,8 +399,8 @@
 
         /* Ticket stat cards (Ticket Logs summary boxes) */
         .ticket-stat-card {
-            background: #5b2a86; /* dark purple that blends with #764ba2 */
-            color: #ffffff;
+            background: #d9681a; /* darker orange background */
+            color: #ffffff; /* white text */
             padding: 12px;
             border-radius: 4px;
             display: flex;
@@ -1327,9 +1346,9 @@
                         Location: ${lat.toFixed(4)}, ${lon.toFixed(4)}
                     `);
                     
-                    // Add permanent label with fill percentage
+                    // Add tooltip that only shows on hover
                     marker.bindTooltip(`${name}<br>${fillPercent}%`, {
-                        permanent: true,
+                        permanent: false,
                         direction: 'top',
                         className: 'cauldron-label',
                         offset: [0, -15]
@@ -1381,9 +1400,9 @@
                     Location: ${lat.toFixed(4)}, ${lon.toFixed(4)}
                 `);
                 
-                // Add permanent label
+                // Add tooltip that only shows on hover
                 marker.bindTooltip(name, {
-                    permanent: true,
+                    permanent: false,
                     direction: 'top',
                     className: 'market-label',
                     offset: [0, -20]
@@ -2170,11 +2189,25 @@
                 'no-data': 0
             };
             
+            // Track suspicious tickets by courier and missing amounts by cauldron
+            const suspiciousByCourier = {}; // courier_id -> count
+            const suspiciousByCauldron = {}; // cauldron_id -> count
+            
             // Count tickets by status
             filteredTickets.forEach(ticket => {
                 const status = ticket.discrepancy_status || 'no-data';
                 if (statusCounts.hasOwnProperty(status)) {
                     statusCounts[status]++;
+                }
+                
+                // Track suspicious tickets by courier (witch)
+                if (status === 'over-reported' || status === 'under-reported' || status === 'no-drain-match') {
+                    const courier = ticket.courier_id || 'Unknown';
+                    suspiciousByCourier[courier] = (suspiciousByCourier[courier] || 0) + 1;
+                    
+                    // Track suspicious tickets by cauldron
+                    const cauldron = ticket.cauldron_id || 'Unknown';
+                    suspiciousByCauldron[cauldron] = (suspiciousByCauldron[cauldron] || 0) + 1;
                 }
             });
             
@@ -2182,9 +2215,29 @@
             const suspicious = statusCounts['over-reported'] + statusCounts['under-reported'] + statusCounts['no-drain-match'];
             const validMatches = statusCounts.match;
             
+            // Find courier with most suspicious tickets
+            let topCourier = 'None';
+            let topCourierCount = 0;
+            Object.entries(suspiciousByCourier).forEach(([courier, count]) => {
+                if (count > topCourierCount) {
+                    topCourierCount = count;
+                    topCourier = courier;
+                }
+            });
+            
+            // Find cauldron with most suspicious tickets
+            let topCauldron = 'None';
+            let topCauldronCount = 0;
+            Object.entries(suspiciousByCauldron).forEach(([cauldron, count]) => {
+                if (count > topCauldronCount) {
+                    topCauldronCount = count;
+                    topCauldron = cauldron;
+                }
+            });
+            
             // Determine color for suspicious rate
             let suspiciousColor = '#66ff66'; // green
-            if (suspicious > total * 0.2) suspiciousColor = '#ff6666'; // red
+            if (suspicious > total * 0.2) suspiciousColor = '#cc0000'; // darker red
             else if (suspicious > total * 0.1) suspiciousColor = '#ffaa66'; // orange
             else if (suspicious > total * 0.05) suspiciousColor = '#ffff66'; // yellow
             
@@ -2192,20 +2245,22 @@
             const statsHTML = `
                 <div class="ticket-stat-card">
                     <div class="ticket-stat-label">✅ Match Tickets</div>
-                    <div class="ticket-stat-value">${validMatches}/${total}</div>
+                    <div class="ticket-stat-value" style="color: #66ff66;">${validMatches}/${total}</div>
                 </div>
                 <div class="ticket-stat-card">
                     <div class="ticket-stat-label">⚠️ Suspicious Tickets</div>
                     <div class="ticket-stat-value" style="color: ${suspiciousColor};">${suspicious}/${total}</div>
                     <div class="ticket-stat-sub">Over: ${statusCounts['over-reported']} | Under: ${statusCounts['under-reported']} | No-Drain: ${statusCounts['no-drain-match']}</div>
                 </div>
-                <div class="ticket-stat-card ticket-stat-muted">
-                    <div class="ticket-stat-label">📈 [Future Metric]</div>
-                    <div class="ticket-stat-value">-</div>
+                <div class="ticket-stat-card">
+                    <div class="ticket-stat-label">🧙 Top Fraudulent Witch</div>
+                    <div class="ticket-stat-value" style="font-size: 20px;">${topCourier}</div>
+                    <div class="ticket-stat-sub">${topCourierCount} suspicious ticket${topCourierCount !== 1 ? 's' : ''}</div>
                 </div>
-                <div class="ticket-stat-card ticket-stat-muted">
-                    <div class="ticket-stat-label">📉 [Future Metric]</div>
-                    <div class="ticket-stat-value">-</div>
+                <div class="ticket-stat-card">
+                    <div class="ticket-stat-label">🪄 Most Problematic Cauldron</div>
+                    <div class="ticket-stat-value" style="font-size: 20px;">${topCauldron}</div>
+                    <div class="ticket-stat-sub">${topCauldronCount} suspicious ticket${topCauldronCount !== 1 ? 's' : ''}</div>
                 </div>
             `;
             
