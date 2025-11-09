@@ -27,7 +27,7 @@ Brew View is a Flask-based dashboard for real-time and historical monitoring of 
 
 ### Prerequisites
 - **Python** 3.7 or higher  
-- **pip** (Python package installer)  
+- **pip3** (Python package installer)  
 - **Internet connection** for API access and map tiles
 
 ---
@@ -52,7 +52,7 @@ Brew View is a Flask-based dashboard for real-time and historical monitoring of 
      ```
 4. Install required dependencies  
    ```
-   pip install -r requirements.txt
+   pip3 install -r requirements.txt
    ```
 
 ---
@@ -61,7 +61,7 @@ Brew View is a Flask-based dashboard for real-time and historical monitoring of 
 1. Ensure you are in the project directory and the virtual environment is active  
 2. Run the Flask app  
    ```
-   python flask_app.py
+   python3 flask_app.py
    ```
 3. Open your browser and navigate to:  
    ```
