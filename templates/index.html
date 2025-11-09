@@ -1174,7 +1174,10 @@
                         
                         <!-- Daily Schedule -->
                         <div style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-                            <h3 style="color: #667eea; margin-bottom: 15px;">🧙 Daily Witch Schedule</h3>
+                            <h3 style="color: #667eea; margin-bottom: 15px;">🧙 Daily Witch Schedule (24-Hour View)</h3>
+                            <p style="color: #666; margin-bottom: 10px; font-size: 14px;">
+                                <strong>Note:</strong> Each witch's routes throughout a 24-hour period. Multiple witches may visit the same cauldron at different times.
+                            </p>
                             <table class="ticket-table">
                                 <thead>
                                     <tr>
@@ -1183,7 +1186,7 @@
                                         <th>Cauldrons</th>
                                         <th>Distance (km)</th>
                                         <th>Time (min)</th>
-                                        <th>Daily Frequency</th>
+                                        <th>Time Window</th>
                                     </tr>
                                 </thead>
                                 <tbody id="schedule-tbody"></tbody>
@@ -3771,8 +3774,17 @@
                     return;
                 }
                 
-                // Step 2: Create optimal routes using TSP
-                const routes = createOptimalTSPRoutes(cauldronAnalysis);
+                // Step 2: Create frequency-based collection schedules for each cauldron
+                const collectionSchedule = createFrequencyBasedSchedule(cauldronAnalysis);
+                
+                if (!collectionSchedule || collectionSchedule.tasks.length === 0) {
+                    console.error('No collection tasks created');
+                    alert('Error: Could not create collection schedule');
+                    return;
+                }
+                
+                // Step 3: Optimize tasks into efficient routes
+                const routes = bundleTasksIntoRoutes(collectionSchedule, cauldronAnalysis);
                 
                 if (!routes || routes.length === 0) {
                     console.error('No routes created');
@@ -3780,16 +3792,16 @@
                     return;
                 }
                 
-                // Step 3: Calculate minimum witches needed
+                // Step 4: Calculate minimum witches needed to execute all routes
                 console.log('About to calculate minimum witches...');
                 console.log('Routes before calculation:', routes);
                 console.log('Cauldron analysis before calculation:', cauldronAnalysis);
                 
                 let witchCount;
                 try {
-                    witchCount = calculateMinimumWitchesForDailySchedule(routes, cauldronAnalysis);
+                    witchCount = calculateMinimumWitchesForSchedule(routes, cauldronAnalysis);
                 } catch (error) {
-                    console.error('❌ Error in calculateMinimumWitchesForDailySchedule:', error);
+                    console.error('❌ Error in calculateMinimumWitchesForSchedule:', error);
                     witchCount = NaN;
                 }
                 
@@ -3803,8 +3815,14 @@
                     return;
                 }
                 
-                // Step 4: Display results
-                displayOptimizationResults(routes, witchCount, cauldronAnalysis);
+                // Step 5: Validate that all cauldrons are visited frequently enough
+                const validation = validateCollectionFrequency(routes, cauldronAnalysis);
+                if (!validation.valid) {
+                    console.warn('⚠️ Collection frequency validation failed:', validation.issues);
+                }
+                
+                // Step 6: Display results
+                displayOptimizationResults(routes, witchCount, cauldronAnalysis, validation);
                 
                 console.log(`✅ Optimization complete: ${witchCount} witches needed`);
             } catch (error) {
@@ -3881,6 +3899,295 @@
             return analysis;
         }
         
+        // Create frequency-based collection schedule - each cauldron visited at its required frequency
+        function createFrequencyBasedSchedule(cauldronAnalysis) {
+            console.log('📅 Creating frequency-based collection schedule...');
+            
+            const schedule = {
+                tasks: [],
+                frequencyTiers: {
+                    critical: [],  // < 6h to fill - need very frequent visits
+                    urgent: [],    // 6-24h to fill
+                    normal: []     // > 24h to fill
+                }
+            };
+            
+            cauldronAnalysis.forEach(cauldron => {
+                const timeToFull = cauldron.timeToFull;
+                
+                // Calculate required visits per day for this cauldron
+                // Visit frequency = slightly more often than needed (80% of time to full for safety)
+                const safetyFactor = 0.8;
+                const visitFrequency = timeToFull * safetyFactor; // hours between visits
+                const visitsPerDay = Math.ceil(24 / visitFrequency);
+                
+                const tier = timeToFull < 6 ? 'critical' : timeToFull < 24 ? 'urgent' : 'normal';
+                
+                schedule.frequencyTiers[tier].push({
+                    cauldron: cauldron,
+                    visitFrequency: visitFrequency,
+                    visitsPerDay: visitsPerDay
+                });
+                
+                // Create individual collection tasks for each required visit
+                for (let i = 0; i < visitsPerDay; i++) {
+                    const visitTime = (i * visitFrequency); // When this visit should happen
+                    schedule.tasks.push({
+                        cauldronId: cauldron.id,
+                        cauldron: cauldron,
+                        visitTime: visitTime,
+                        visitIndex: i,
+                        tier: tier,
+                        frequency: visitFrequency
+                    });
+                }
+            });
+            
+            // Sort tasks by visit time
+            schedule.tasks.sort((a, b) => a.visitTime - b.visitTime);
+            
+            console.log(`  Total collection tasks per day: ${schedule.tasks.length}`);
+            console.log(`  Critical tier: ${schedule.frequencyTiers.critical.length} cauldrons`);
+            console.log(`  Urgent tier: ${schedule.frequencyTiers.urgent.length} cauldrons`);
+            console.log(`  Normal tier: ${schedule.frequencyTiers.normal.length} cauldrons`);
+            
+            return schedule;
+        }
+        
+        // Bundle collection tasks into efficient routes based on timing and capacity
+        function bundleTasksIntoRoutes(collectionSchedule, cauldronAnalysis) {
+            console.log('🗺️ Bundling tasks into efficient routes...');
+            
+            const WITCH_CAPACITY = calculateWitchCapacity();
+            const marketLoc = market ? { lat: market.latitude, lng: market.longitude } : null;
+            const marketId = market ? (market.id || 'market_001') : 'market_001';
+            
+            const routes = [];
+            const tasks = [...collectionSchedule.tasks]; // Copy to avoid mutation
+            
+            // Redistribute normal-tier tasks (only 1 visit/day) more evenly throughout the day
+            // This prevents all 10+ normal cauldrons from being visited at hour 0
+            let normalTaskIndex = 0;
+            const normalTasks = tasks.filter(t => t.tier === 'normal' && t.visitIndex === 0);
+            if (normalTasks.length > 0) {
+                const redistributionWindow = 20; // Spread over first 20 hours to leave buffer
+                const spacing = redistributionWindow / normalTasks.length;
+                normalTasks.forEach((task, idx) => {
+                    task.visitTime = idx * spacing;
+                    console.log(`  📍 Redistributed ${task.cauldronId} to hour ${task.visitTime.toFixed(1)}`);
+                });
+            }
+            
+            // Group tasks by time windows (1-hour windows)
+            const timeWindows = {};
+            tasks.forEach(task => {
+                const window = Math.floor(task.visitTime);
+                if (!timeWindows[window]) timeWindows[window] = [];
+                timeWindows[window].push(task);
+            });
+            
+            console.log(`  Time windows: ${Object.keys(timeWindows).length}`);
+            
+            // For each time window, create optimized routes
+            Object.keys(timeWindows).sort((a, b) => Number(a) - Number(b)).forEach(windowStart => {
+                const windowTasks = timeWindows[windowStart];
+                console.log(`  Window ${windowStart}h: ${windowTasks.length} tasks`);
+                
+                // Group tasks in this window into capacity-constrained routes
+                let currentRoute = null;
+                
+                windowTasks.forEach(task => {
+                    const estimatedCycleTime = 3; // hours
+                    const volumePerCycle = task.cauldron.fillRate * estimatedCycleTime;
+                    
+                    // Check if we need a new route
+                    if (!currentRoute || 
+                        (currentRoute.totalVolume + volumePerCycle > WITCH_CAPACITY) ||
+                        currentRoute.cauldrons.length >= 8) {
+                        
+                        // Finalize previous route
+                        if (currentRoute && currentRoute.cauldrons.length > 0) {
+                            finalizeRoute(currentRoute, marketLoc, marketId);
+                            routes.push(currentRoute);
+                        }
+                        
+                        // Start new route
+                        currentRoute = {
+                            windowStart: Number(windowStart),
+                            cauldrons: [],
+                            tasks: [],
+                            sequence: [],
+                            distance: 0,
+                            time: 0,
+                            totalVolume: 0
+                        };
+                    }
+                    
+                    // Add task to current route
+                    currentRoute.tasks.push(task);
+                    if (!currentRoute.cauldrons.find(c => c.id === task.cauldronId)) {
+                        currentRoute.cauldrons.push(task.cauldron);
+                        currentRoute.totalVolume += volumePerCycle;
+                    }
+                });
+                
+                // Finalize last route in window
+                if (currentRoute && currentRoute.cauldrons.length > 0) {
+                    finalizeRoute(currentRoute, marketLoc, marketId);
+                    
+                    // Check if route extends past 24h and adjust if needed
+                    const routeDurationHours = currentRoute.time / 60;
+                    const routeEndTime = currentRoute.windowStart + routeDurationHours;
+                    
+                    if (routeEndTime > 24) {
+                        const adjustedStart = 24 - routeDurationHours;
+                        if (adjustedStart >= 0) {
+                            console.log(`    ⏰ Adjusted route start from ${currentRoute.windowStart}h to ${adjustedStart.toFixed(1)}h to fit within 24h`);
+                            currentRoute.windowStart = adjustedStart;
+                        } else {
+                            console.warn(`    ⚠️ Route too long (${routeDurationHours.toFixed(1)}h) to fit in 24h window - needs splitting`);
+                        }
+                    }
+                    
+                    routes.push(currentRoute);
+                }
+            });
+            
+            console.log(`  Created ${routes.length} routes`);
+            routes.forEach((route, idx) => {
+                const endTime = route.windowStart + (route.time / 60);
+                console.log(`  Route ${idx + 1} (window ${route.windowStart.toFixed(1)}h-${endTime.toFixed(1)}h): ${route.cauldrons.length} cauldrons, ${route.time.toFixed(0)}min, ${route.totalVolume.toFixed(1)}L`);
+            });
+            
+            return routes;
+        }
+        
+        // Finalize a route by calculating optimal TSP sequence and travel times
+        function finalizeRoute(route, marketLoc, marketId) {
+            // Create TSP sequence for cauldrons in this route
+            const unvisited = new Set(route.cauldrons.map(c => c.id));
+            let currentPos = marketLoc;
+            let currentId = marketId;
+            
+            route.sequence = ['market'];
+            route.distance = 0;
+            route.time = 0;
+            
+            // Greedy TSP
+            while (unvisited.size > 0) {
+                let nearest = null;
+                let minTime = Infinity;
+                let nearestDist = 0;
+                
+                unvisited.forEach(cId => {
+                    const c = route.cauldrons.find(ca => ca.id === cId);
+                    const travelTime = calculateTravelTime(currentPos, c.location, currentId, cId);
+                    if (travelTime < minTime) {
+                        minTime = travelTime;
+                        nearest = cId;
+                        nearestDist = getDistance(currentPos, c.location);
+                    }
+                });
+                
+                if (nearest) {
+                    const cauldronData = route.cauldrons.find(c => c.id === nearest);
+                    route.sequence.push(nearest);
+                    route.time += minTime + 5; // 5 min collection
+                    route.distance += nearestDist;
+                    currentPos = cauldronData.location;
+                    currentId = nearest;
+                    unvisited.delete(nearest);
+                }
+            }
+            
+            // Return to market
+            const returnTime = calculateTravelTime(currentPos, marketLoc, currentId, marketId);
+            const returnDist = getDistance(currentPos, marketLoc);
+            route.time += returnTime + 15; // 15 min dropoff
+            route.distance += returnDist;
+            route.sequence.push('market');
+        }
+        
+        // Validate that all cauldrons are visited frequently enough
+        function validateCollectionFrequency(routes, cauldronAnalysis) {
+            console.log('✅ Validating collection frequency...');
+            
+            const validation = {
+                valid: true,
+                issues: []
+            };
+            
+            // Count how many times each cauldron is visited per day
+            const visitCounts = {};
+            routes.forEach(route => {
+                route.cauldrons.forEach(cauldron => {
+                    visitCounts[cauldron.id] = (visitCounts[cauldron.id] || 0) + 1;
+                });
+            });
+            
+            // Check each cauldron
+            cauldronAnalysis.forEach(cauldron => {
+                const visitsPerDay = visitCounts[cauldron.id] || 0;
+                const requiredVisitsPerDay = Math.ceil(24 / (cauldron.timeToFull * 0.8)); // 80% safety margin
+                
+                if (visitsPerDay < requiredVisitsPerDay) {
+                    validation.valid = false;
+                    validation.issues.push({
+                        cauldronId: cauldron.id,
+                        actualVisits: visitsPerDay,
+                        requiredVisits: requiredVisitsPerDay,
+                        timeToFull: cauldron.timeToFull,
+                        severity: cauldron.status
+                    });
+                    console.warn(`  ⚠️ ${cauldron.id}: ${visitsPerDay} visits/day (need ${requiredVisitsPerDay})`);
+                } else {
+                    console.log(`  ✓ ${cauldron.id}: ${visitsPerDay} visits/day (need ${requiredVisitsPerDay})`);
+                }
+            });
+            
+            return validation;
+        }
+        
+        // Calculate minimum witch carrying capacity from historical ticket data
+        function calculateWitchCapacity() {
+            if (!allTickets || allTickets.length === 0) {
+                console.log('  No ticket data available, using default capacity: 200L');
+                return 200;
+            }
+            
+            // Find max amount collected in a single ticket
+            const maxCollected = Math.max(...allTickets.map(t => t.amount_collected || 0));
+            
+            // Also calculate per-courier max to see if they differ
+            const courierMaxCapacities = {};
+            allTickets.forEach(ticket => {
+                const courier = ticket.courier_id;
+                const amount = ticket.amount_collected || 0;
+                if (!courierMaxCapacities[courier] || amount > courierMaxCapacities[courier]) {
+                    courierMaxCapacities[courier] = amount;
+                }
+            });
+            
+            console.log('  📊 Courier capacity analysis from historical data:');
+            Object.entries(courierMaxCapacities).forEach(([courier, max]) => {
+                console.log(`    ${courier}: max ${max.toFixed(1)}L collected in single trip`);
+            });
+            
+            const capacities = Object.values(courierMaxCapacities);
+            const minCapacity = Math.min(...capacities);
+            const maxCapacity = Math.max(...capacities);
+            const avgCapacity = capacities.reduce((a, b) => a + b, 0) / capacities.length;
+            
+            console.log(`  Overall capacity range: ${minCapacity.toFixed(1)}L - ${maxCapacity.toFixed(1)}L`);
+            console.log(`  Average max collected: ${avgCapacity.toFixed(1)}L`);
+            
+            // Use the maximum observed as the capacity (assume witches fill to max)
+            const capacity = maxCollected;
+            console.log(`  ✅ Using witch capacity: ${capacity.toFixed(1)}L (max observed from data)`);
+            
+            return capacity;
+        }
+        
         // Create optimal routes using TSP (Traveling Salesman Problem) greedy approach
         function createOptimalTSPRoutes(cauldronAnalysis) {
             console.log('🗺️ Creating optimal routes using TSP...');
@@ -3908,19 +4215,27 @@
             const MAX_CAULDRONS_PER_ROUTE = 8;
             
             const marketLoc = market ? { lat: market.latitude, lng: market.longitude } : null;
+            // Market ID in network might be 'market_001', 'MARKET', or 'market'
+            const marketId = market ? (market.id || 'market_001') : 'market_001';
+            console.log(`  Using market ID: ${marketId}`);
+            
+            // Calculate witch capacity from historical data
+            const WITCH_CAPACITY = calculateWitchCapacity();
             
             while (unvisited.size > 0) {
                 const route = {
                     cauldrons: [],
                     sequence: [],
                     distance: 0,
-                    time: 0
+                    time: 0,
+                    totalVolume: 0  // Track total liquid collected
                 };
                 
                 let currentPos = marketLoc;
-                let currentId = 'market';
+                let currentId = marketId;  // Use marketId instead of 'market'
                 
                 // Greedy TSP: always pick nearest unvisited cauldron based on TRAVEL TIME
+                // Also respect witch carrying capacity
                 while (unvisited.size > 0 && route.cauldrons.length < MAX_CAULDRONS_PER_ROUTE) {
                     let nearest = null;
                     let minTime = Infinity;
@@ -3928,6 +4243,18 @@
                     
                     unvisited.forEach(cId => {
                         const c = cauldronAnalysis.find(ca => ca.id === cId);
+                        
+                        // Check if adding this cauldron would exceed witch capacity
+                        // We need to consider how much will accumulate in one collection cycle
+                        // Since we don't know cycle time yet, use a conservative estimate based on most urgent cauldron
+                        // Most urgent fills in 3h, so use 3h as cycle time for capacity planning
+                        const estimatedCycleTime = 3; // hours (conservative - based on most urgent cauldron)
+                        const volumePerCycle = c.fillRate * estimatedCycleTime; // L accumulated per cycle
+                        
+                        if (route.totalVolume + volumePerCycle > WITCH_CAPACITY) {
+                            return; // Skip this cauldron - would exceed capacity
+                        }
+                        
                         // Use actual network travel time, not straight-line distance
                         const travelTime = calculateTravelTime(currentPos, c.location, currentId, cId);
                         if (travelTime < minTime) {
@@ -3942,6 +4269,11 @@
                         route.sequence.push(nearest);
                         route.cauldrons.push(cauldronData);
                         
+                        // Track volume collected per cycle (not current snapshot level)
+                        const estimatedCycleTime = 3; // hours
+                        const volumePerCycle = cauldronData.fillRate * estimatedCycleTime;
+                        route.totalVolume += volumePerCycle;
+                        
                         // Add travel time and collection time
                         route.time += minTime + 5; // 5 min collection time
                         route.distance += nearestDist;
@@ -3949,18 +4281,21 @@
                         currentPos = cauldronData.location;
                         currentId = nearest;
                         unvisited.delete(nearest);
+                    } else {
+                        // No more cauldrons can be added without exceeding capacity
+                        break;
                     }
                 }
                 
                 // Return to market
                 if (route.cauldrons.length > 0) {
                     const returnDist = getDistance(currentPos, marketLoc);
-                    const returnTime = calculateTravelTime(currentPos, marketLoc, currentId, 'market');
+                    const returnTime = calculateTravelTime(currentPos, marketLoc, currentId, marketId);  // Use marketId
                     route.distance += returnDist;
                     route.time += returnTime + 15; // 15 min dropoff time
                     
                     routes.push(route);
-                    console.log(`  Route ${routes.length}: ${route.cauldrons.length} cauldrons, ${route.distance.toFixed(2)}km, ${route.time.toFixed(1)}min`);
+                    console.log(`  Route ${routes.length}: ${route.cauldrons.length} cauldrons, ${route.distance.toFixed(2)}km, ${route.time.toFixed(1)}min, ${route.totalVolume.toFixed(1)}L collected (capacity: ${WITCH_CAPACITY}L)`);
                 }
             }
             
@@ -3968,6 +4303,143 @@
         }
         
         // Calculate minimum witches needed based on most urgent cauldron
+        // Calculate minimum witches for frequency-based schedule
+        function calculateMinimumWitchesForSchedule(routes, cauldronAnalysis) {
+            console.log('🧙 Calculating minimum witches for frequency-based schedule...');
+            console.log(`  Total routes to execute per day: ${routes.length}`);
+            
+            // Calculate total workload (all route times per day)
+            let totalWorkMinutes = 0;
+            routes.forEach((route, idx) => {
+                console.log(`  Route ${idx + 1} (window ${route.windowStart}h): ${route.time.toFixed(0)} min`);
+                totalWorkMinutes += route.time;
+            });
+            
+            const totalWorkHours = totalWorkMinutes / 60;
+            const availableHoursPerWitch = 24; // Each witch works 24 hours (shift system)
+            
+            // Start with minimum estimate, but we'll increase if needed during assignment
+            let witchesNeeded = Math.ceil(totalWorkHours / availableHoursPerWitch);
+            
+            console.log(`  Total work per day: ${totalWorkHours.toFixed(2)} hours`);
+            console.log(`  Available per witch: ${availableHoursPerWitch} hours/day`);
+            console.log(`  Initial estimate: ${witchesNeeded} witches`);
+            
+            // Helper function to check if two time ranges overlap
+            function timeRangesOverlap(start1, end1, start2, end2) {
+                return (start1 < end2 && end1 > start2);
+            }
+            
+            // Create witch schedules - start with initial estimate
+            const witchSchedules = [];
+            for (let i = 0; i < witchesNeeded; i++) {
+                witchSchedules.push({
+                    witchId: `Witch-${i + 1}`,
+                    assignments: [],
+                    shiftStart: 0,
+                    totalTime: 0
+                });
+            }
+            
+            // Distribute routes across witches, ensuring they fit within 24h
+            // A witch can't be in two places at once, so check for ANY time overlap for same witch
+            let currentWitchIndex = 0;
+            
+            routes.forEach((route, idx) => {
+                const routeDurationHours = route.time / 60;
+                const routeStartTime = route.windowStart;
+                const routeEndTime = route.windowStart + routeDurationHours;
+                
+                // Check if route extends past 24h - if so, we can't use it
+                if (routeEndTime > 24) {
+                    console.warn(`  ⚠️ Route ${idx + 1} extends past 24h (${routeStartTime.toFixed(1)}h-${routeEndTime.toFixed(1)}h) - skipping`);
+                    return;
+                }
+                
+                // Find a witch that has capacity for this route
+                let assigned = false;
+                let attempts = 0;
+                const maxAttempts = witchSchedules.length * 2; // Try all witches twice
+                
+                while (!assigned && attempts < maxAttempts) {
+                    const witch = witchSchedules[currentWitchIndex];
+                    
+                    // Check if adding this route would exceed 24 hours total work
+                    if (witch.totalTime + routeDurationHours <= 24) {
+                        // Check if this witch already has an assignment during this time
+                        // A witch can't be in two places at once!
+                        const hasTimeConflict = witch.assignments.some(assignment => {
+                            return timeRangesOverlap(
+                                routeStartTime, routeEndTime,
+                                assignment.startHour, assignment.endHour
+                            );
+                        });
+                        
+                        if (!hasTimeConflict) {
+                            witch.assignments.push({
+                                routeNum: idx + 1,
+                                route: route,
+                                startHour: routeStartTime,
+                                endHour: routeEndTime,
+                                cauldrons: route.cauldrons.map(c => c.id)
+                            });
+                            witch.totalTime += routeDurationHours;
+                            assigned = true;
+                            console.log(`    ✓ Assigned Route ${idx + 1} (${routeStartTime.toFixed(1)}h-${routeEndTime.toFixed(1)}h) to ${witch.witchId}`);
+                        }
+                    }
+                    
+                    if (!assigned) {
+                        currentWitchIndex = (currentWitchIndex + 1) % witchSchedules.length;
+                        attempts++;
+                    }
+                }
+                
+                // If still not assigned after trying all witches, add a new witch
+                if (!assigned) {
+                    witchesNeeded++;
+                    const newWitch = {
+                        witchId: `Witch-${witchesNeeded}`,
+                        assignments: [{
+                            routeNum: idx + 1,
+                            route: route,
+                            startHour: routeStartTime,
+                            endHour: routeEndTime,
+                            cauldrons: route.cauldrons.map(c => c.id)
+                        }],
+                        shiftStart: 0,
+                        totalTime: routeDurationHours
+                    };
+                    witchSchedules.push(newWitch);
+                    console.log(`    ➕ Added ${newWitch.witchId} for Route ${idx + 1} (${routeStartTime.toFixed(1)}h-${routeEndTime.toFixed(1)}h)`);
+                }
+            });
+            
+            // Sort each witch's assignments by start time for clean daily pattern
+            witchSchedules.forEach(witch => {
+                witch.assignments.sort((a, b) => a.startHour - b.startHour);
+                console.log(`  ${witch.witchId}: ${witch.assignments.length} routes, ${witch.totalTime.toFixed(2)}h total`);
+            });
+            
+            console.log(`\n  📊 Final allocation: ${witchesNeeded} witches needed (started with ${Math.ceil(totalWorkHours / availableHoursPerWitch)})`);
+            
+            // Store for display
+            window.currentWitchSchedules = witchSchedules;
+            
+            // Store routes
+            routes.forEach((route, idx) => {
+                const assignedWitch = witchSchedules.find(w => 
+                    w.assignments.some(a => a.routeNum === idx + 1)
+                );
+                route.witchId = assignedWitch ? assignedWitch.witchId : 'Unassigned';
+                route.dailyFrequency = 1; // Each route executed once per window
+                route.cycleTime = 24;
+            });
+            
+            return witchesNeeded;
+        }
+        
+        // OLD FUNCTION - kept for backwards compatibility
         function calculateMinimumWitchesForDailySchedule(routes, cauldronAnalysis) {
             console.log('🧙 Calculating minimum witches for sustainable daily operation...');
             console.log('  Routes count:', routes ? routes.length : 'null');
@@ -4035,20 +4507,101 @@
             const completionsPerDay = 24 / requiredFrequency;
             console.log(`  Each route must be completed ${completionsPerDay.toFixed(1)} times per day`);
             
-            // Assign witches to routes for display purposes
+            // Create a fixed daily schedule where each witch has the same routine every day
+            // Each witch gets assigned specific routes that repeat at fixed times
+            const witchSchedules = [];
+            
+            // Calculate shift start times - evenly distribute witches across the day
+            const shiftOffset = 24 / witchesNeeded; // Hours between witch start times
+            
+            for (let witchNum = 1; witchNum <= witchesNeeded; witchNum++) {
+                const witchStartOffset = (witchNum - 1) * shiftOffset;
+                
+                witchSchedules.push({
+                    witchId: `Witch-${witchNum}`,
+                    assignments: [],
+                    shiftStart: witchStartOffset
+                });
+            }
+            
+            // Assign each witch to handle all routes, but starting at their offset time
+            witchSchedules.forEach(witch => {
+                let currentTime = witch.shiftStart;
+                let cyclesCompleted = 0;
+                
+                // Each witch completes full cycles (both routes) starting from their shift time
+                while (currentTime < 24 && cyclesCompleted < completionsPerDay / witchesNeeded) {
+                    routes.forEach(route => {
+                        const durationHours = route.time / 60;
+                        const endTime = currentTime + durationHours;
+                        
+                        // Only add if route completes before end of day
+                        if (endTime <= 24) {
+                            witch.assignments.push({
+                                routeNum: routes.indexOf(route) + 1,
+                                route: route,
+                                startHour: currentTime,
+                                endHour: endTime,
+                                cauldrons: route.cauldrons.map(c => c.id)
+                            });
+                            currentTime = endTime;
+                        }
+                    });
+                    
+                    cyclesCompleted++;
+                    
+                    // Wait for next cycle time (aligned to 3-hour intervals)
+                    const nextCycleStart = witch.shiftStart + (cyclesCompleted * requiredFrequency);
+                    currentTime = Math.max(currentTime, nextCycleStart);
+                }
+            });
+            
+            // Store witch schedules for display
             routes.forEach((route, idx) => {
                 route.witchId = `Witch-${(idx % witchesNeeded) + 1}`;
                 route.dailyFrequency = Math.ceil(completionsPerDay);
                 route.cycleTime = requiredFrequency;
             });
             
+            // Store for results display
+            window.currentWitchSchedules = witchSchedules;
+            
             return witchesNeeded;
         }
         
         // Display optimization results
-        function displayOptimizationResults(routes, witchCount, cauldronAnalysis) {
+        function displayOptimizationResults(routes, witchCount, cauldronAnalysis, validation) {
             // Show results container
             document.getElementById('optimization-results').style.display = 'block';
+            
+            // Display validation results first
+            let validationHTML = '';
+            if (validation && !validation.valid) {
+                validationHTML = `
+                    <div style="background: #fff3cd; padding: 15px; margin-bottom: 20px; border-left: 4px solid #ffc107; border-radius: 4px;">
+                        <h4 style="color: #856404; margin: 0 0 10px 0;">⚠️ Collection Frequency Validation Issues</h4>
+                        <p style="margin: 0 0 10px 0;">Some cauldrons are not being visited frequently enough:</p>
+                        <ul style="margin: 0; padding-left: 20px;">
+                            ${validation.issues.map(issue => `
+                                <li><strong>${issue.cauldronId}</strong>: ${issue.actualVisits} visits/day (needs ${issue.requiredVisits}) - 
+                                fills in ${issue.timeToFull.toFixed(1)}h [${issue.severity}]</li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+            } else if (validation) {
+                validationHTML = `
+                    <div style="background: #d4edda; padding: 15px; margin-bottom: 20px; border-left: 4px solid #28a745; border-radius: 4px;">
+                        <h4 style="color: #155724; margin: 0;">✅ All Cauldrons Visited Frequently Enough</h4>
+                        <p style="margin: 5px 0 0 0;">Every cauldron is scheduled for collection before it can overflow.</p>
+                    </div>
+                `;
+            }
+            
+            if (validationHTML) {
+                const statsContainer = document.getElementById('optimization-stats');
+                statsContainer.insertAdjacentHTML('beforebegin', validationHTML);
+            }
             
             // Stats
             const totalDistance = routes.reduce((sum, r) => sum + r.distance, 0);
@@ -4066,20 +4619,20 @@
                     <div class="stat-value">${witchCount} 🧙</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Route Cycles Per Day</div>
-                    <div class="stat-value">${cycleFrequency}x</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Total Routes</div>
+                    <div class="stat-label">Total Routes Per Day</div>
                     <div class="stat-value">${routes.length}</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Total Distance Per Cycle</div>
+                    <div class="stat-label">Total Distance Per Day</div>
                     <div class="stat-value">${totalDistance.toFixed(2)} km</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Time Per Cycle</div>
+                    <div class="stat-label">Total Work Time Per Day</div>
                     <div class="stat-value">${(totalTime / 60).toFixed(2)} hours</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Work Per Witch</div>
+                    <div class="stat-value">${(totalTime / 60 / witchCount).toFixed(2)} hours/day</div>
                 </div>
                 <div class="stat-item">
                     <div class="stat-label">Most Urgent Cauldron</div>
@@ -4087,20 +4640,43 @@
                 </div>
             `;
             
-            // Schedule table
+            // Schedule table - show all witch schedules
             let scheduleHTML = '';
-            routes.forEach(route => {
-                scheduleHTML += `
-                    <tr>
-                        <td>${route.witchId}</td>
-                        <td>${route.sequence.join(' → ')}</td>
-                        <td>${route.cauldrons.length}</td>
-                        <td>${route.distance.toFixed(2)}</td>
-                        <td>${route.time.toFixed(0)}</td>
-                        <td>${route.dailyFrequency}x per day</td>
-                    </tr>
-                `;
-            });
+            
+            if (window.currentWitchSchedules && window.currentWitchSchedules.length > 0) {
+                // Show detailed witch schedules
+                window.currentWitchSchedules.forEach(witch => {
+                    witch.assignments.forEach((assignment, idx) => {
+                        const timeRange = `${assignment.startHour.toFixed(1)}h - ${assignment.endHour.toFixed(1)}h`;
+                        const sequence = ['market', ...assignment.cauldrons, 'market'].join(' → ');
+                        
+                        scheduleHTML += `
+                            <tr>
+                                <td>${witch.witchId}</td>
+                                <td>${sequence}</td>
+                                <td>${assignment.cauldrons.length}</td>
+                                <td>${assignment.route.distance.toFixed(2)}</td>
+                                <td>${assignment.route.time.toFixed(0)}</td>
+                                <td>${timeRange}</td>
+                            </tr>
+                        `;
+                    });
+                });
+            } else {
+                // Fallback to original route display
+                routes.forEach(route => {
+                    scheduleHTML += `
+                        <tr>
+                            <td>${route.witchId}</td>
+                            <td>${route.sequence.join(' → ')}</td>
+                            <td>${route.cauldrons.length}</td>
+                            <td>${route.distance.toFixed(2)}</td>
+                            <td>${route.time.toFixed(0)}</td>
+                            <td>${route.dailyFrequency}x per day</td>
+                        </tr>
+                    `;
+                });
+            }
             document.getElementById('schedule-tbody').innerHTML = scheduleHTML;
             
             // Cauldron analysis table
@@ -4123,8 +4699,155 @@
             });
             document.getElementById('cauldron-analysis-tbody').innerHTML = analysisHTML;
             
+            // Analyze concurrent cauldron visits
+            analyzeConcurrentVisits(window.currentWitchSchedules, cauldronAnalysis);
+            
             // Draw route map
             displayRouteMap(routes);
+        }
+        
+        // Analyze which cauldrons are visited by multiple witches
+        function analyzeConcurrentVisits(witchSchedules, cauldronAnalysis) {
+            if (!witchSchedules) return;
+            
+            // Track all visits to each cauldron with precise timing
+            const cauldronVisits = {};
+            
+            witchSchedules.forEach(witch => {
+                witch.assignments.forEach(assignment => {
+                    const routeStartTime = assignment.startHour;
+                    let currentTime = routeStartTime;
+                    
+                    // Calculate when each cauldron in the route is visited
+                    assignment.cauldrons.forEach((cauldronId, idx) => {
+                        if (!cauldronVisits[cauldronId]) {
+                            cauldronVisits[cauldronId] = [];
+                        }
+                        
+                        // Estimate time at this cauldron (travel time accumulated + collection time)
+                        // This is approximate - we assume even distribution of time across cauldrons
+                        const cauldronCount = assignment.cauldrons.length;
+                        const totalRouteTime = assignment.endHour - assignment.startHour;
+                        const timePerCauldron = totalRouteTime / cauldronCount;
+                        const visitStart = routeStartTime + (idx * timePerCauldron);
+                        const visitEnd = visitStart + (5/60); // 5 minutes collection time converted to hours
+                        
+                        cauldronVisits[cauldronId].push({
+                            witch: witch.witchId,
+                            routeStartHour: assignment.startHour,
+                            routeEndHour: assignment.endHour,
+                            visitStartHour: visitStart,
+                            visitEndHour: visitEnd
+                        });
+                    });
+                });
+            });
+            
+            // Find concurrent visits (overlapping time windows AT THE SAME CAULDRON)
+            let concurrentHTML = '<h4 style="color: #667eea; margin-bottom: 10px;">🔍 Concurrent Cauldron Access Analysis</h4>';
+            concurrentHTML += '<p style="color: #666; font-size: 14px; margin-bottom: 15px;">Checking if multiple witches visit the same cauldron at the exact same time (not just overlapping routes).</p>';
+            let hasConcurrent = false;
+            let totalOverlaps = 0;
+            const conflictDetails = [];
+            
+            Object.keys(cauldronVisits).forEach(cauldronId => {
+                const visits = cauldronVisits[cauldronId];
+                
+                if (visits.length > 1) {
+                    // Check for overlapping VISIT times (not route times) at this specific cauldron
+                    const overlaps = [];
+                    for (let i = 0; i < visits.length; i++) {
+                        for (let j = i + 1; j < visits.length; j++) {
+                            const v1 = visits[i];
+                            const v2 = visits[j];
+                            
+                            // Check if actual visit times at THIS cauldron overlap
+                            // Two visits overlap if one starts before the other ends
+                            if (v1.visitStartHour < v2.visitEndHour && v2.visitStartHour < v1.visitEndHour) {
+                                overlaps.push({ v1, v2 });
+                                totalOverlaps++;
+                                conflictDetails.push({
+                                    cauldron: cauldronId,
+                                    witch1: v1.witch,
+                                    witch2: v2.witch,
+                                    visit1: `${v1.visitStartHour.toFixed(2)}h-${v1.visitEndHour.toFixed(2)}h`,
+                                    visit2: `${v2.visitStartHour.toFixed(2)}h-${v2.visitEndHour.toFixed(2)}h`,
+                                    route1: `(route: ${v1.routeStartHour.toFixed(1)}h-${v1.routeEndHour.toFixed(1)}h)`,
+                                    route2: `(route: ${v2.routeStartHour.toFixed(1)}h-${v2.routeEndHour.toFixed(1)}h)`
+                                });
+                            }
+                        }
+                    }
+                    
+                    if (overlaps.length > 0) {
+                        hasConcurrent = true;
+                        concurrentHTML += `<div style="background: #fff3cd; padding: 10px; margin: 10px 0; border-left: 4px solid #ffaa00; border-radius: 4px;">`;
+                        concurrentHTML += `<strong style="color: #ff8800;">⚠️ ${cauldronId}</strong>: `;
+                        overlaps.forEach(overlap => {
+                            concurrentHTML += `${overlap.v1.witch} visits at ${overlap.v1.visitStartHour.toFixed(2)}h <strong>CONFLICTS</strong> with ${overlap.v2.witch} at ${overlap.v2.visitStartHour.toFixed(2)}h. `;
+                        });
+                        concurrentHTML += `</div>`;
+                    }
+                }
+            });
+            
+            if (!hasConcurrent) {
+                concurrentHTML += `<div style="background: #d4edda; padding: 15px; margin: 10px 0; border-left: 4px solid #28a745; border-radius: 4px; color: #155724;">`;
+                concurrentHTML += `✅ <strong>No concurrent access detected!</strong> While witch routes may overlap in time, each witch visits different cauldrons at different moments. `;
+                concurrentHTML += `All ${witchSchedules.length} witches can operate simultaneously without conflicts.`;
+                concurrentHTML += `<br><br><em>Cauldrons do NOT need multiple drain taps - only one witch accesses each cauldron at any given time.</em>`;
+                concurrentHTML += `</div>`;
+            } else {
+                concurrentHTML += `<div style="background: #f8d7da; padding: 15px; margin: 10px 0; border-left: 4px solid #dc3545; border-radius: 4px; color: #721c24;">`;
+                concurrentHTML += `⚠️ <strong>CONCURRENT ACCESS DETECTED: ${totalOverlaps} conflict(s) found!</strong><br><br>`;
+                concurrentHTML += `Multiple witches will attempt to drain from the same cauldron at the exact same time. Solutions:<br>`;
+                concurrentHTML += `<strong>Option 1:</strong> Add small time offsets between witch shifts to stagger cauldron visits<br>`;
+                concurrentHTML += `<strong>Option 2:</strong> Cauldrons support multiple drain taps for parallel draining<br>`;
+                concurrentHTML += `<strong>Option 3:</strong> Witches coordinate/queue when conflict detected (adds wait time)`;
+                concurrentHTML += `</div>`;
+                
+                // Detailed conflict report
+                concurrentHTML += `<div style="background: #fff; padding: 10px; margin: 10px 0; border: 1px solid #dc3545; border-radius: 4px;">`;
+                concurrentHTML += `<strong>Detailed Conflict Report:</strong><br>`;
+                conflictDetails.forEach((conf, idx) => {
+                    concurrentHTML += `${idx + 1}. <strong>${conf.cauldron}</strong>: ${conf.witch1} visits ${conf.visit1} ⚡ ${conf.witch2} visits ${conf.visit2}<br>`;
+                    concurrentHTML += `   &nbsp;&nbsp;&nbsp;${conf.route1} vs ${conf.route2}<br>`;
+                });
+                concurrentHTML += `</div>`;
+            }
+            
+            // Add visit schedule for each cauldron
+            concurrentHTML += `<h4 style="color: #667eea; margin: 20px 0 10px 0;">📅 Cauldron Visit Schedule (Precise Timing)</h4>`;
+            Object.keys(cauldronVisits).sort().forEach(cauldronId => {
+                const visits = cauldronVisits[cauldronId];
+                const cauldron = cauldronAnalysis.find(c => c.id === cauldronId);
+                const timeToFull = cauldron ? cauldron.timeToFull.toFixed(1) : 'N/A';
+                
+                // Check if this cauldron has any conflicts
+                const hasConflict = visits.length > 1 && visits.some((v1, i) => 
+                    visits.slice(i + 1).some(v2 => 
+                        v1.visitStartHour < v2.visitEndHour && v2.visitStartHour < v1.visitEndHour
+                    )
+                );
+                
+                const borderColor = hasConflict ? '#dc3545' : '#28a745';
+                const bgColor = hasConflict ? 'rgba(248, 215, 218, 0.3)' : 'rgba(255,255,255,0.8)';
+                
+                concurrentHTML += `<div style="background: ${bgColor}; padding: 8px; margin: 5px 0; border-radius: 4px; border: 1px solid ${borderColor};">`;
+                concurrentHTML += `<strong>${cauldronId}</strong> (fills in ${timeToFull}h) - visited ${visits.length}x per day: `;
+                concurrentHTML += visits.map(v => `${v.witch} at ${v.visitStartHour.toFixed(2)}h (±${(5/60).toFixed(2)}h)`).join(', ');
+                if (hasConflict) {
+                    concurrentHTML += ` <span style="color: #dc3545; font-weight: bold;">⚠️ CONFLICT</span>`;
+                }
+                concurrentHTML += `</div>`;
+            });
+            
+            // Insert before the cauldron analysis table
+            const cauldronAnalysisDiv = document.querySelector('#cauldron-analysis-tbody').parentElement.parentElement;
+            const analysisSection = document.createElement('div');
+            analysisSection.style.cssText = 'background: rgba(255,255,255,0.5); padding: 20px; border-radius: 10px; margin-bottom: 20px;';
+            analysisSection.innerHTML = concurrentHTML;
+            cauldronAnalysisDiv.parentElement.insertBefore(analysisSection, cauldronAnalysisDiv);
         }
         
         // Display routes on map
