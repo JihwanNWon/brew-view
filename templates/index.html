@@ -83,7 +83,52 @@
         body.light-mode .bar-chart-container,
         body.light-mode .timeline-container,
         body.light-mode .threejs-container {
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(94, 53, 177, 0.2);
+            box-shadow: 0 8px 32px rgba(94, 53, 177, 0.1), 0 0 60px rgba(94, 53, 177, 0.05);
+        }
+
+        body.light-mode .stat-card {
+            background: linear-gradient(135deg, rgba(94, 53, 177, 0.6), rgba(103, 58, 183, 0.5));
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        body.light-mode .timeline-btn,
+        body.light-mode .threejs-control-btn {
+            background: linear-gradient(135deg, rgba(94, 53, 177, 0.7), rgba(103, 58, 183, 0.6));
+        }
+
+        body.light-mode .bar-chart {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        body.light-mode .date-group select,
+        body.light-mode .filter-group select,
+        body.light-mode .filter-group input {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        body.light-mode .checkbox-group {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        body.light-mode .time-slider-container {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        body.light-mode .dropdown-filter-toggle {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        body.light-mode .dropdown-filter-menu {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(15px);
         }
 
         body.light-mode .info-panel h2,
@@ -1102,6 +1147,46 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
+        /* 3D Hover Tooltip */
+        .threejs-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(102, 126, 234, 0.5);
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            max-width: 250px;
+        }
+
+        .threejs-tooltip h4 {
+            margin: 0 0 8px 0;
+            color: #667eea;
+            font-size: 16px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+            padding-bottom: 4px;
+        }
+
+        .threejs-tooltip p {
+            margin: 4px 0;
+            line-height: 1.5;
+        }
+
+        .threejs-tooltip .tooltip-label {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+        }
+
+        .threejs-tooltip .tooltip-value {
+            color: white;
+            font-weight: 600;
+        }
+
         .threejs-controls {
             display: flex;
             gap: 15px;
@@ -1292,6 +1377,9 @@
                 <h2>🔮 Interactive 3D Potion Network</h2>
                 <div id="threejs-loading" class="loading">Initializing 3D scene...</div>
                 <div id="threejs-canvas" style="position: relative;">
+                    <!-- Hover Tooltip -->
+                    <div id="threejs-tooltip" class="threejs-tooltip"></div>
+
                     <div class="threejs-legend">
                         <h3>📊 Legend</h3>
                         <div class="legend-item">
@@ -6676,6 +6764,9 @@
         let isAnimating3d = true;
         let showParticles3d = true;
         let viewMode3d = 0; // 0: perspective, 1: top, 2: side
+        let raycaster3d = null;
+        let mouse3d = new THREE.Vector2();
+        let hoveredObject3d = null;
 
         function init3DVisualization() {
             const container = document.getElementById('threejs-canvas');
@@ -6761,6 +6852,13 @@
             // Add starfield background
             createStarfield();
 
+            // Initialize raycaster for hover detection
+            raycaster3d = new THREE.Raycaster();
+
+            // Add mouse move event listener for hover detection
+            container.addEventListener('mousemove', onMouse3DMove, false);
+            container.addEventListener('mouseleave', onMouse3DLeave, false);
+
             // Load and visualize cauldron data
             load3DCauldronData();
 
@@ -6769,6 +6867,81 @@
 
             // Start animation
             animate3D();
+        }
+
+        function onMouse3DMove(event) {
+            const container = document.getElementById('threejs-canvas');
+            if (!container) return;
+
+            const rect = container.getBoundingClientRect();
+            mouse3d.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse3d.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            // Update raycaster
+            if (raycaster3d && camera3d) {
+                raycaster3d.setFromCamera(mouse3d, camera3d);
+                const intersects = raycaster3d.intersectObjects(cauldron3dObjects, true);
+
+                if (intersects.length > 0) {
+                    // Find the parent group (cauldron)
+                    let cauldronGroup = intersects[0].object;
+                    while (cauldronGroup.parent && !cauldronGroup.userData.cauldron) {
+                        cauldronGroup = cauldronGroup.parent;
+                    }
+
+                    if (cauldronGroup.userData.cauldron) {
+                        hoveredObject3d = cauldronGroup;
+                        showTooltip3D(cauldronGroup.userData, event.clientX, event.clientY);
+                        container.style.cursor = 'pointer';
+                    }
+                } else {
+                    hoveredObject3d = null;
+                    hideTooltip3D();
+                    container.style.cursor = 'grab';
+                }
+            }
+        }
+
+        function onMouse3DLeave() {
+            hoveredObject3d = null;
+            hideTooltip3D();
+            const container = document.getElementById('threejs-canvas');
+            if (container) container.style.cursor = 'grab';
+        }
+
+        function showTooltip3D(userData, x, y) {
+            const tooltip = document.getElementById('threejs-tooltip');
+            if (!tooltip || !userData.cauldron) return;
+
+            const cauldron = userData.cauldron;
+            const fillPercent = userData.fillPercent || 0;
+
+            // Status based on fill level
+            let status = '🟢 Low';
+            if (fillPercent > 90) status = '🔴 Critical';
+            else if (fillPercent > 75) status = '🟠 High';
+            else if (fillPercent > 60) status = '🟡 Medium';
+            else if (fillPercent > 40) status = '🟢 Normal';
+
+            tooltip.innerHTML = `
+                <h4>${cauldron.name || cauldron.id}</h4>
+                <p><span class="tooltip-label">ID:</span> <span class="tooltip-value">${cauldron.id}</span></p>
+                <p><span class="tooltip-label">Fill Level:</span> <span class="tooltip-value">${fillPercent.toFixed(1)}%</span></p>
+                <p><span class="tooltip-label">Capacity:</span> <span class="tooltip-value">${cauldron.max_volume || 'N/A'} L</span></p>
+                <p><span class="tooltip-label">Status:</span> <span class="tooltip-value">${status}</span></p>
+                <p><span class="tooltip-label">Location:</span> <span class="tooltip-value">${cauldron.latitude.toFixed(4)}, ${cauldron.longitude.toFixed(4)}</span></p>
+            `;
+
+            tooltip.style.display = 'block';
+            tooltip.style.left = (x + 15) + 'px';
+            tooltip.style.top = (y + 15) + 'px';
+        }
+
+        function hideTooltip3D() {
+            const tooltip = document.getElementById('threejs-tooltip');
+            if (tooltip) {
+                tooltip.style.display = 'none';
+            }
         }
 
         function createStarfield() {
@@ -6854,7 +7027,7 @@
 
             // Use real lat/lng coordinates - normalized to 3D space
             // Scale factor to make distances visible but reasonable
-            const scaleFactor = 3000; // Adjust this to change spread
+            const scaleFactor = 8000; // Increased to spread cauldrons further apart
 
             // Market center coordinates (our origin)
             const marketLat = 33.2148;
@@ -6975,43 +7148,43 @@
 
             console.log(`Market positioned at center (0, 0)`);
 
-            // Market building (box) - larger
-            const geometry = new THREE.BoxGeometry(6, 8, 6);
+            // Market building (box) - smaller to match cauldron scale
+            const geometry = new THREE.BoxGeometry(4, 6, 4);
             const material = new THREE.MeshPhongMaterial({
                 color: 0xff6b6b,
                 emissive: 0xc92a2a,
                 emissiveIntensity: 0.3
             });
             const building = new THREE.Mesh(geometry, material);
-            building.position.y = 4;
+            building.position.y = 3;
             building.castShadow = true;
             group.add(building);
 
-            // Market roof (cone) - larger
-            const roofGeometry = new THREE.ConeGeometry(5, 4, 4);
+            // Market roof (cone) - smaller
+            const roofGeometry = new THREE.ConeGeometry(3.5, 3, 4);
             const roofMaterial = new THREE.MeshPhongMaterial({
                 color: 0xc92a2a,
                 emissive: 0xa01a1a,
                 emissiveIntensity: 0.2
             });
             const roof = new THREE.Mesh(roofGeometry, roofMaterial);
-            roof.position.y = 10;
+            roof.position.y = 7.5;
             roof.rotation.y = Math.PI / 4;
             group.add(roof);
 
-            // Add glowing orb on top
-            const orbGeometry = new THREE.SphereGeometry(0.8, 16, 16);
+            // Add glowing orb on top - smaller
+            const orbGeometry = new THREE.SphereGeometry(0.6, 16, 16);
             const orbMaterial = new THREE.MeshBasicMaterial({
                 color: 0xffff00,
                 emissive: 0xffff00,
                 emissiveIntensity: 1
             });
             const orb = new THREE.Mesh(orbGeometry, orbMaterial);
-            orb.position.y = 12.5;
+            orb.position.y = 9.5;
             group.add(orb);
 
-            // Add market label
-            createTextLabel('🏪 MARKET', group, 14);
+            // Add market label - lower position
+            createTextLabel('🏪 MARKET', group, 11);
 
             group.position.set(x, 0, z);
             group.userData = { type: 'market', market };
