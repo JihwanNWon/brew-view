@@ -1426,6 +1426,28 @@
                     <p><strong>Controls:</strong> Left-click + drag to rotate | Right-click + drag to pan | Scroll to zoom</p>
                     <p><strong>Features:</strong> Real-time 3D cauldron network with animated potion flows, particle effects, and interactive controls. Cauldron height represents fill level.</p>
                 </div>
+
+                <!-- Historical Timeline Scrubber for 3D Visualization -->
+                <div class="time-slider-container" style="margin-top: 20px;">
+                    <h3 style="color: #667eea; margin-bottom: 10px;">⏱️ Historical Timeline</h3>
+                    <div class="time-label">Time of Day:</div>
+                    <div class="timeline-info">
+                        <div>
+                            <span class="timestamp-display" id="current-timestamp-3d">Select a date...</span>
+                        </div>
+                    </div>
+                    <input type="range" class="timeline-slider" id="time-slider-3d"
+                           min="0" max="0" value="0" step="1" disabled>
+
+                    <!-- Playback Controls centered underneath timeline -->
+                    <div class="timeline-controls">
+                        <button class="timeline-btn" id="btn-first-3d">⏮️ First</button>
+                        <button class="timeline-btn" id="btn-prev-3d">⏪ Previous</button>
+                        <button class="timeline-btn" id="btn-play-3d">▶️ Play</button>
+                        <button class="timeline-btn" id="btn-next-3d">Next ⏩</button>
+                        <button class="timeline-btn" id="btn-last-3d">⏭️ Last</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2487,18 +2509,23 @@
             const year = document.getElementById('year-select').value;
             const month = document.getElementById('month-select').value;
             const day = document.getElementById('day-select').value;
-            
+
             if (!year || !month || !day) {
                 alert('Please select a year, month, and day');
                 return;
             }
-            
+
             updateTimeSlider();
-            
+
             if (filteredTimestamps.length > 0) {
                 const sliderIndex = parseInt(document.getElementById('time-slider').value);
                 const actualIndex = filteredTimestamps[sliderIndex].index;
                 await loadLevelsAtIndex(actualIndex);
+
+                // Sync 3D timeline if it exists
+                if (typeof sync3DTimeline === 'function') {
+                    sync3DTimeline();
+                }
             }
         }
         
@@ -6971,30 +6998,31 @@
         async function load3DCauldronData() {
             try {
                 console.log('Loading 3D cauldron data...');
-                const [cauldronRes, levelsRes, marketRes] = await Promise.all([
+                const [cauldronRes, marketRes] = await Promise.all([
                     fetch('/api/cauldrons'),
-                    fetch('/api/current-levels'),
                     fetch('/api/market')
                 ]);
 
-                const cauldrons = await cauldronRes.json();
-                const levelsData = await levelsRes.json();
+                const cauldronData = await cauldronRes.json();
                 const marketData = await marketRes.json();
 
-                console.log('Cauldrons:', cauldrons);
-                console.log('Levels:', levelsData);
+                console.log('Cauldrons:', cauldronData);
 
-                if (!cauldrons || cauldrons.error) {
+                if (!cauldronData || cauldronData.error) {
                     console.error('No cauldron data available');
                     return;
                 }
 
-                const levels = levelsData.levels || {};
+                // Store cauldron data globally for use with timeline
+                if (!window.cauldrons3d) {
+                    window.cauldrons3d = cauldronData;
+                }
 
-                // Create 3D cauldrons
-                cauldrons.forEach(cauldron => {
-                    const level = levels[cauldron.id] || 50;
-                    const fillPercent = (level / cauldron.capacity) * 100;
+                // Create 3D cauldrons using currentLevels from the map's timeline
+                cauldronData.forEach(cauldron => {
+                    const maxVolume = cauldron.max_volume || cauldron.capacity || 1000;
+                    const currentVolume = currentLevels[cauldron.id] || 0;
+                    const fillPercent = (currentVolume / maxVolume) * 100;
                     create3DCauldron(cauldron, fillPercent);
                 });
 
@@ -7344,6 +7372,228 @@
             controls3d.update();
         }
 
+        // Update 3D cauldrons with current timeline data
+        function update3DCauldrons() {
+            if (!window.cauldrons3d || cauldron3dObjects.length === 0) return;
+
+            window.cauldrons3d.forEach((cauldron, index) => {
+                if (index >= cauldron3dObjects.length) return;
+
+                const group = cauldron3dObjects[index];
+                const maxVolume = cauldron.max_volume || cauldron.capacity || 1000;
+                const currentVolume = currentLevels[cauldron.id] || 0;
+                const fillPercent = (currentVolume / maxVolume) * 100;
+
+                // Update liquid height
+                const liquidHeight = (fillPercent / 100) * 5;
+                const liquid = group.userData.liquid;
+                if (liquid) {
+                    // Remove old liquid and glow
+                    group.remove(liquid);
+                    if (group.userData.glow) {
+                        group.remove(group.userData.glow);
+                    }
+
+                    // Create new liquid with updated height
+                    const cauldronRadius = 2;
+                    const baseHeight = 3;
+                    const liquidGeometry = new THREE.CylinderGeometry(cauldronRadius * 0.9, cauldronRadius * 0.7, liquidHeight, 16);
+
+                    // Color based on fill level
+                    let color;
+                    if (fillPercent > 90) color = 0xdc143c; // red
+                    else if (fillPercent > 75) color = 0xff8c00; // orange
+                    else if (fillPercent > 60) color = 0xffd700; // yellow
+                    else if (fillPercent > 40) color = 0xadff2f; // greenyellow
+                    else color = 0x90ee90; // lightgreen
+
+                    const liquidMaterial = new THREE.MeshPhongMaterial({
+                        color: color,
+                        emissive: color,
+                        emissiveIntensity: 0.3,
+                        transparent: true,
+                        opacity: 0.8,
+                        shininess: 100
+                    });
+                    const newLiquid = new THREE.Mesh(liquidGeometry, liquidMaterial);
+                    newLiquid.position.y = baseHeight / 2 + liquidHeight / 2;
+                    group.add(newLiquid);
+
+                    // Glow effect
+                    const glowGeometry = new THREE.SphereGeometry(cauldronRadius * 1.5, 16, 16);
+                    const glowMaterial = new THREE.MeshBasicMaterial({
+                        color: color,
+                        transparent: true,
+                        opacity: 0.15
+                    });
+                    const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+                    glow.position.y = baseHeight / 2 + liquidHeight / 2;
+                    group.add(glow);
+
+                    // Update userData
+                    group.userData.liquid = newLiquid;
+                    group.userData.glow = glow;
+                    group.userData.fillPercent = fillPercent;
+                    group.userData.color = color;
+                }
+            });
+        }
+
+        // Timeline control functions for 3D visualization
+        let isPlaying3d = false;
+        let playInterval3d = null;
+
+        function setupTimeline3DControls() {
+            const slider = document.getElementById('time-slider-3d');
+            const btnFirst = document.getElementById('btn-first-3d');
+            const btnPrev = document.getElementById('btn-prev-3d');
+            const btnPlay = document.getElementById('btn-play-3d');
+            const btnNext = document.getElementById('btn-next-3d');
+            const btnLast = document.getElementById('btn-last-3d');
+
+            if (!slider) return;
+
+            // Time slider change
+            slider.addEventListener('input', function() {
+                update3DTimestampDisplay();
+            });
+
+            slider.addEventListener('change', async function() {
+                if (filteredTimestamps.length > 0) {
+                    const sliderIndex = parseInt(this.value);
+                    const actualIndex = filteredTimestamps[sliderIndex].index;
+                    await loadLevelsAtIndex(actualIndex);
+                    update3DCauldrons();
+                }
+            });
+
+            // First button
+            btnFirst.addEventListener('click', async function() {
+                if (filteredTimestamps.length > 0) {
+                    slider.value = 0;
+                    const actualIndex = filteredTimestamps[0].index;
+                    await loadLevelsAtIndex(actualIndex);
+                    update3DCauldrons();
+                    update3DTimestampDisplay();
+                }
+            });
+
+            // Previous button
+            btnPrev.addEventListener('click', async function() {
+                const sliderIndex = parseInt(slider.value);
+                const newIndex = Math.max(0, sliderIndex - 1);
+                slider.value = newIndex;
+                if (filteredTimestamps.length > 0) {
+                    const actualIndex = filteredTimestamps[newIndex].index;
+                    await loadLevelsAtIndex(actualIndex);
+                    update3DCauldrons();
+                    update3DTimestampDisplay();
+                }
+            });
+
+            // Play/Pause button
+            btnPlay.addEventListener('click', function() {
+                if (isPlaying3d) {
+                    stop3DPlayback();
+                } else {
+                    start3DPlayback();
+                }
+            });
+
+            // Next button
+            btnNext.addEventListener('click', async function() {
+                const sliderIndex = parseInt(slider.value);
+                const newIndex = Math.min(filteredTimestamps.length - 1, sliderIndex + 1);
+                slider.value = newIndex;
+                if (filteredTimestamps.length > 0) {
+                    const actualIndex = filteredTimestamps[newIndex].index;
+                    await loadLevelsAtIndex(actualIndex);
+                    update3DCauldrons();
+                    update3DTimestampDisplay();
+                }
+            });
+
+            // Last button
+            btnLast.addEventListener('click', async function() {
+                if (filteredTimestamps.length > 0) {
+                    slider.value = filteredTimestamps.length - 1;
+                    const actualIndex = filteredTimestamps[filteredTimestamps.length - 1].index;
+                    await loadLevelsAtIndex(actualIndex);
+                    update3DCauldrons();
+                    update3DTimestampDisplay();
+                }
+            });
+        }
+
+        function start3DPlayback() {
+            if (filteredTimestamps.length === 0) return;
+
+            isPlaying3d = true;
+            document.getElementById('btn-play-3d').textContent = '⏸️ Pause';
+
+            const slider = document.getElementById('time-slider-3d');
+
+            playInterval3d = setInterval(async () => {
+                const sliderIndex = parseInt(slider.value);
+                if (sliderIndex >= filteredTimestamps.length - 1) {
+                    stop3DPlayback();
+                    return;
+                }
+
+                const newIndex = sliderIndex + 1;
+                slider.value = newIndex;
+                const actualIndex = filteredTimestamps[newIndex].index;
+                await loadLevelsAtIndex(actualIndex);
+                update3DCauldrons();
+                update3DTimestampDisplay();
+            }, 100); // Play at 10 timestamps per second (100ms each)
+        }
+
+        function stop3DPlayback() {
+            isPlaying3d = false;
+            document.getElementById('btn-play-3d').textContent = '▶️ Play';
+            if (playInterval3d) {
+                clearInterval(playInterval3d);
+                playInterval3d = null;
+            }
+        }
+
+        function update3DTimestampDisplay() {
+            if (!filteredTimestamps || filteredTimestamps.length === 0) return;
+
+            const sliderIndex = parseInt(document.getElementById('time-slider-3d').value);
+            if (sliderIndex < 0 || sliderIndex >= filteredTimestamps.length) return;
+
+            const timestamp = filteredTimestamps[sliderIndex].timestamp;
+            const date = new Date(timestamp);
+
+            const options = {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: selectedTimezone,
+                timeZoneName: 'short'
+            };
+
+            document.getElementById('current-timestamp-3d').textContent =
+                date.toLocaleString('en-US', options);
+        }
+
+        // Sync 3D timeline with map timeline when data is loaded
+        function sync3DTimeline() {
+            const slider3d = document.getElementById('time-slider-3d');
+            if (!slider3d || !filteredTimestamps) return;
+
+            slider3d.max = filteredTimestamps.length - 1;
+            slider3d.value = filteredTimestamps.length - 1;
+            slider3d.disabled = false;
+
+            update3DTimestampDisplay();
+        }
+
         // Initialize 3D when tab is opened
         let is3DInitialized = false;
 
@@ -7355,6 +7605,8 @@
             if (tabName === '3d' && !is3DInitialized) {
                 setTimeout(() => {
                     init3DVisualization();
+                    setupTimeline3DControls();
+                    sync3DTimeline();
                     is3DInitialized = true;
                 }, 100);
             }
